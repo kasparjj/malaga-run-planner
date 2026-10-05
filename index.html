@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f1c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Málaga Run">
+<title>Málaga Run Planner</title>
+<style>
+:root{--bg:#070b16;--bg2:#0e1528;--card:#111a2e;--inner:#0a0f1c;--line:#24304a;--txt:#f3f6fb;--mut:#8b97ad;--acc:#7dd3fc;--g1:#4fc3f7;--g2:#7c5cf2;
+--easy:#4fc3f7;--tempo:#ff9f43;--pace:#c6f432;--long:#a78bfa;--shake:#5eead4;--race:#f472b6;--other:#64748b;--ok:#34d399;--gel:#facc15;--water:#38bdf8;--iso:#fb923c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;min-height:100%;background:var(--bg)}
+html{background:#070b16}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#14203a 0,var(--bg) 520px) fixed,var(--bg);color:var(--txt);padding:24px 18px calc(30px + env(safe-area-inset-bottom))}
+.wrap{width:100%;max-width:none;margin:0}
+.eyebrow{color:var(--acc);font-weight:800;letter-spacing:.16em;font-size:13px;text-transform:uppercase}
+h1{font-size:clamp(34px,9vw,52px);line-height:1.05;margin:8px 0;font-weight:800;letter-spacing:-.02em}
+h3.sub{font-size:15px;margin:16px 0 0}
+.lead{color:var(--mut);margin:0 0 16px;font-size:15px}
+.chip{display:inline-flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 16px;font-weight:700;font-size:15px}
+.grid{display:grid;gap:16px;margin-top:18px}
+@media(min-width:860px){.grid.two{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;margin-top:16px}
+.grid .card{margin-top:0}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.ch h2{margin:0;font-size:21px;font-weight:700}
+.hint{color:var(--mut);font-size:15px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{background:var(--inner);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.tile b{display:block;font-size:25px;font-weight:800;font-variant-numeric:tabular-nums}
+.tile small{color:var(--mut);font-size:12px}
+.tile.info{cursor:pointer}
+.note{color:var(--mut);font-size:12px;line-height:1.45;margin:10px 0 0}
+.cd{display:flex;gap:10px;margin:4px 0 16px}
+.cd div{flex:1;text-align:center}
+.cd b{display:block;font-size:clamp(34px,10vw,46px);font-weight:800;font-variant-numeric:tabular-nums;background:linear-gradient(90deg,var(--g1),var(--g2));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.1}
+.cd small{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.12em}
+.btn{appearance:none;background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px 18px;font-size:15px;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;text-align:center}
+.btn.sm{padding:10px 14px}
+.btn.grad{background:linear-gradient(135deg,var(--g1),var(--g2));border:0;font-weight:600;color:#fff}
+.btn.del{color:#fda4af;border-color:#5b2333;background:#22121a}
+.btn:disabled{opacity:.4}
+.calbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.nav{display:flex;gap:6px}
+.drag-hint{width:100%;color:var(--mut);font-size:13px}
+.range{color:var(--txt);font-weight:700;font-size:15px;margin:0 0 6px}
+.weeksum{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);margin-bottom:6px}
+.prog{height:6px;background:var(--inner);border-radius:4px;overflow:hidden;margin-bottom:12px}
+.prog span{display:block;height:100%;background:linear-gradient(90deg,var(--g1),var(--g2))}
+/* week view */
+.week{display:flex;flex-direction:column;gap:10px}
+.day{display:flex;gap:12px;background:var(--inner);border:1px solid var(--line);border-radius:16px;padding:12px;min-height:60px;align-items:center;transition:.15s}
+.day.today{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.day.over{border-color:var(--g2);border-style:dashed;background:#141c34}
+.day.past{opacity:.6}
+.dl{width:46px;flex:none;text-align:center}
+.dl small{display:block;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+.dl b{font-size:22px}
+.evs{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.addd,.edit{flex:none;width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--mut);font-size:17px;cursor:pointer;padding:0;line-height:1}
+.edit{background:var(--inner);font-size:14px;width:28px;height:28px}
+.ev{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:12px;padding:8px 8px 8px 11px;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-y;min-width:0}
+.ev .body{flex:1;min-width:0}
+.ev.sel{outline:2px solid var(--g1)}
+.ev .t{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev .m{color:var(--mut);font-size:13px;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.done .t:after{content:" ✓";color:var(--ok)}
+.ev.dragging{opacity:.35}
+.ghost{position:fixed;pointer-events:none;z-index:99;opacity:.92;transform:rotate(-2deg);box-shadow:0 10px 30px #000a}
+.empty{color:#4b5873;font-size:13px}
+@media(min-width:768px){
+  .week:not(.month){display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+  .week:not(.month) .day{flex-direction:column;align-items:stretch;min-height:130px;padding:7px;gap:5px;border-radius:12px}
+  .week:not(.month) .dl{width:auto;text-align:left;display:flex;gap:6px;align-items:baseline}
+  .week:not(.month) .dl b{font-size:16px}
+  .week:not(.month) .addd{align-self:flex-end;margin-top:auto;width:24px;height:24px;font-size:14px;border-radius:7px}
+  .week:not(.month) .evs{gap:5px}
+  .week:not(.month) .ev{padding:5px 4px 5px 7px;border-radius:9px;border-left-width:3px}
+  .week:not(.month) .ev .t{font-size:12px}.week:not(.month) .ev .m{font-size:11px}
+  .week:not(.month) .edit{width:20px;height:20px;font-size:11px;border-radius:6px}
+}
+/* month view */
+.week.month{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.mhd{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.08em;text-align:center;padding:2px 0 4px}
+.week.month .day{flex-direction:column;align-items:stretch;gap:3px;min-height:92px;padding:5px;border-radius:10px;cursor:pointer}
+.week.month .day.out{opacity:.3}
+.week.month .day.past:not(.out){opacity:.65}
+.mtop{display:flex;justify-content:space-between;align-items:center;gap:2px}
+.mtop b{font-size:13px}
+.mtop .wn{font-size:10px;color:var(--mut);font-weight:400;margin-left:4px}
+.week.month .addd{width:20px;height:20px;font-size:13px;border-radius:6px}
+.ev.mini{padding:3px 3px 3px 6px;border-radius:7px;border-left-width:3px;gap:3px;cursor:grab}
+.ev.mini .t{font-size:11px}.ev.mini .m{font-size:10px;margin:0}
+.ev.mini .edit{width:18px;height:18px;font-size:10px;border-radius:5px}
+@media(min-width:601px){.ev.mini .t,.week:not(.month) .ev .t{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.2}
+ .week:not(.month) .ev .m{white-space:normal}}
+.ev .k{display:none}
+.msum{grid-column:1/-1;display:flex;justify-content:space-between;font-size:11px;color:var(--mut);padding:0 2px}
+@media(max-width:600px){
+  .week.month{gap:3px}
+  .week.month .day{min-height:62px;padding:3px;border-radius:8px}
+  .week.month .addd,.ev.mini .m,.ev.mini .edit{display:none}
+  .ev.mini{padding:2px 2px 2px 4px;border-radius:5px}
+  .ev.mini .t{display:none}.ev.mini .k{display:block;font-size:11px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums}.ev.mini{justify-content:center}
+  .mtop b{font-size:12px}.mtop .wn{display:none}
+}
+label{display:block;color:var(--mut);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:12px 0 6px}
+input,select,textarea{display:block;width:100%;min-width:0;max-width:100%;background:var(--inner);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;font-family:inherit;-webkit-appearance:none;appearance:none}
+input[type=date]{min-height:46px;line-height:1.2}
+input::-webkit-date-and-time-value{text-align:left}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='18' fill='none' stroke='%23aab' stroke-width='2'%3E%3Cpath d='M2 7l4-4 4 4M2 11l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+textarea{min-height:64px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--g1)}
+input[type=range]{padding:0;border:0;background:none;height:28px;-webkit-appearance:auto;appearance:auto;accent-color:#7c5cf2}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+details summary{cursor:pointer;font-size:16px;margin-top:14px;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary:before{content:"▶ ";font-size:12px}
+details[open] summary:before{content:"▼ "}
+.log{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.logr{display:flex;justify-content:space-between;gap:10px;background:var(--inner);border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-size:13px;font-variant-numeric:tabular-nums;cursor:pointer}
+.logr span{color:var(--mut)}
+.good{color:var(--ok)!important}.warn{color:#fbbf24!important}.bad{color:#fb7185!important}
+.sheetbg{position:fixed;inset:0;background:#0009;opacity:0;pointer-events:none;transition:.25s;z-index:80}
+.sheetbg.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:90;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;padding:10px 18px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto;transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);max-width:560px;margin:0 auto;visibility:hidden}
+.sheet.open{transform:none;visibility:visible}
+.grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+.x{background:var(--inner);border:1px solid var(--line);color:var(--mut);width:34px;height:34px;border-radius:10px;font-size:15px;cursor:pointer}
+.seg{display:inline-flex;background:var(--inner);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{background:none;border:0;color:var(--mut);padding:7px 12px;border-radius:9px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.seg button.on{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;font-weight:600}
+.routebox{background:#16213a;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+#routeSvg{display:block;width:100%;height:auto}
+#eleSvg{display:block;width:100%;height:auto;border-top:1px solid var(--line);background:var(--inner)}
+.kmbar{padding:8px 14px 12px;border-top:1px solid var(--line)}
+#kmInfo{display:flex;justify-content:space-between;gap:6px;font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums;flex-wrap:wrap}
+#kmInfo b{color:var(--txt)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.fuel{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.fuel div{background:var(--inner);border:1px solid var(--line);border-top:3px solid var(--fc);border-radius:12px;padding:9px 10px}
+.fuel b{display:block;font-size:14px}
+.fuel em{font-style:normal;color:var(--acc);font-size:12px;font-variant-numeric:tabular-nums}
+.fuel small{color:var(--mut);font-size:12px;display:block;line-height:1.35;margin-top:3px}
+.rstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 0}
+.rstats div{background:var(--inner);border:1px solid var(--line);border-radius:12px;padding:9px 10px}
+.rstats b{display:block;font-size:16px}.rstats small{color:var(--mut);font-size:11px}
+iframe.map{width:100%;height:420px;border:0;border-radius:16px;background:#e5e9ef;display:block}
+.maplinks{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mapnote{color:var(--mut);font-size:12px;margin:8px 0 0;line-height:1.45}
+.facts{margin-top:12px}
+.fact{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.fact span{color:var(--mut)}
+.foot{text-align:center;color:var(--mut);font-size:12px;margin:22px 0 0}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:linear-gradient(135deg,var(--g1),var(--g2));padding:11px 16px;border-radius:14px;font-weight:600;opacity:0;transition:.25s;z-index:100;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+@media(max-width:859px){
+ body{padding:14px 12px calc(20px + env(safe-area-inset-bottom))}
+ .eyebrow{font-size:11px}h1{font-size:28px;margin:4px 0}.lead{font-size:13px;margin-bottom:10px}
+ .chip{padding:7px 12px;font-size:13px;border-radius:11px}
+ .grid{gap:10px;margin-top:12px}.card{padding:14px;border-radius:18px;margin-top:10px}
+ .ch{margin-bottom:8px}.ch h2{font-size:17px}.hint{font-size:12px}
+ .tiles{grid-template-columns:repeat(4,1fr);gap:6px}.tile{padding:9px 7px;border-radius:12px}.tile b{font-size:15px}.tile small{font-size:10px;line-height:1.2;display:block}
+ .cd{margin:0 0 10px}.cd b{font-size:30px}.cd small{font-size:10px}
+ .btn{padding:10px 13px;font-size:14px;border-radius:12px}.btn.sm{padding:8px 11px;font-size:13px}
+ .nav .btn{padding:7px 10px;font-size:13px}.seg button{padding:6px 10px}.drag-hint{font-size:11px}
+ .range{font-size:14px}.weeksum{font-size:12px}.prog{margin-bottom:10px}
+ .week:not(.month){gap:6px}.week:not(.month) .day{padding:7px 8px;min-height:0;gap:8px;border-radius:12px}
+ .dl{width:32px}.dl b{font-size:17px}.dl small{font-size:10px}
+ .evs{gap:5px}.week:not(.month) .ev{padding:6px 6px 6px 9px;border-radius:10px}.ev .t{font-size:13px}.ev .m{font-size:12px;margin-top:0}
+ .week:not(.month) .addd{width:28px;height:28px;font-size:16px;border-radius:8px}.empty{font-size:12px}
+ details summary{font-size:15px}.logr{padding:7px 10px;font-size:12px;flex-direction:column;gap:2px}
+ .rstats b{font-size:14px}.rstats div{padding:7px 8px}
+ .fuel{grid-template-columns:1fr 1fr;gap:6px}.fuel div{padding:7px 8px}.fuel b{font-size:13px}.fuel small{font-size:11px}
+ #kmInfo{font-size:12px}.maplinks .btn{flex:1 1 auto}
+ iframe.map{height:380px}.fact{font-size:12px;padding:7px 0}
+}
+@media(min-width:768px) and (max-width:859px){.week:not(.month) .day{flex-direction:column;align-items:stretch;min-height:130px;padding:7px}}
+
+.badge{display:inline-block;min-width:18px;padding:0 6px;margin-left:6px;border-radius:999px;background:#f472b6;color:#fff;font-size:11px;font-weight:800;line-height:18px}
+.badge:empty{display:none}
+.chk{display:flex;gap:10px;align-items:center;text-transform:none;letter-spacing:0;font-weight:400;font-size:14px;color:var(--txt);margin:10px 0 0}
+.chk input{width:20px;height:20px;padding:0;-webkit-appearance:auto;appearance:auto;accent-color:#7c5cf2;flex:none}
+.help p{color:#c7d3e0;font-size:13px;line-height:1.5;margin:8px 0}
+#volSvg{width:100%;height:auto;display:block}
+.band{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.band div{background:var(--inner);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-variant-numeric:tabular-nums}
+.band div.fuel{border-color:#facc15}.band div.fin{border-color:#f472b6;grid-column:span 2}
+.band b{display:block;font-size:14px}.band small{color:var(--mut);font-size:11px}
+.cl{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer}
+.cl input{width:20px;height:20px;flex:none;-webkit-appearance:auto;appearance:auto;accent-color:#34d399;margin-top:1px}
+.cl.done span{color:var(--mut);text-decoration:line-through}
+.cl em{font-style:normal;color:var(--acc);font-size:12px;display:block}
+.wxbig{font-size:13px;color:var(--mut)}
+@media(min-width:1400px){.grid.two{grid-template-columns:1fr 1fr}}
+@media(max-width:859px){.band{grid-template-columns:repeat(3,1fr)}.band b{font-size:13px}}
+@media print{body *{visibility:hidden}#bandCard,#bandCard *{visibility:visible}#bandCard{position:absolute;left:0;top:0;width:100%;background:#fff;color:#000;border:0}#bandCard .band div{background:#fff;border-color:#999}#bandCard .note,#printBand,#bandCard .frow{display:none}}
+
+[hidden]{display:none!important}
+.toprow{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.raceseg{margin-bottom:10px}.raceseg button{font-size:14px;padding:9px 14px}
+.chip{margin:0 6px 6px 0}
+.warnbox{background:#2a1f0b;border:1px solid #7c5a12;color:#fde68a;border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.45;margin:8px 0 0}
+.filebtn{display:inline-block;margin:0;text-transform:none;letter-spacing:0;font-weight:400;color:var(--txt);font-size:inherit;cursor:pointer}
+h3.sub .hint{font-size:12px;font-weight:400;margin-left:6px}
+.strip{display:flex;gap:5px;overflow-x:auto;padding:4px 2px 8px;margin-top:6px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.kc{flex:1 0 64px;min-width:64px;background:var(--inner);border:1px solid var(--line);border-top:3px solid #64748b;border-radius:10px;padding:6px 4px;color:var(--txt);font:inherit;cursor:pointer;text-align:center;display:flex;flex-direction:column;gap:1px}
+.kc small{color:var(--mut);font-size:10px}.kc b{font-size:15px;font-variant-numeric:tabular-nums}
+.kc i{font-style:normal;font-size:11px;font-variant-numeric:tabular-nums}.kc em{font-style:normal;color:var(--mut);font-size:10px;font-variant-numeric:tabular-nums}
+.kc span{font-size:11px;min-height:14px}
+.kc.even{border-top-color:#c6f432}.kc.even i{color:#c6f432}.kc.slow{border-top-color:#fb923c}.kc.slow i{color:#fb923c}.kc.fast{border-top-color:#34d399}.kc.fast i{color:#34d399}
+.kc.cur{background:#1b2744;outline:2px solid #7c5cf2}
+@media(max-width:859px){.raceseg{width:100%}.raceseg button{flex:1}.kc{min-width:56px;flex-basis:56px}.kc b{font-size:13px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="toprow">
+    <div>
+      <div class="eyebrow">Málaga • 8 Nov 2026</div>
+      <h1 id="h1">Half Marathon Run Planner</h1>
+    </div>
+    <div class="seg raceseg"><button data-race="half">Half · 21.1 km</button><button data-race="full">Marathon · 42.2 km</button></div>
+  </div>
+  <p class="lead" id="lead">Plan, move and log your runs towards race day.</p>
+  <span class="chip">🎯 <span id="chipTxt">21.1 km @ 5:30/km</span></span>
+  <span class="chip" id="waveChip">🚦 Wave 3 · 08:50</span>
+  <p class="warnbox" id="fullWarn" hidden>⚠️ <b>Heads-up:</b> 5 weeks is a short build-up for a marathon from a 10 km base. The marathon plan focuses on finishing: easy long runs, run-walk is fine, and a conservative goal. If anything hurts, drop back to the half.</p>
+
+  <div class="grid two">
+    <section class="card">
+      <div class="ch"><h2>Race countdown</h2><span class="hint">Start 08:30 • Paseo del Parque</span></div>
+      <div class="cd" id="cd"></div>
+      <div class="tiles">
+        <div class="tile"><b id="tDist">21.10 km</b><small>Race</small></div>
+        <div class="tile info" id="predTile" title="What does Predicted mean?"><b id="tPred">–</b><small>Predicted ⓘ</small></div>
+        <div class="tile"><b id="tGoal">1:56:00</b><small>Goal (finish time)</small></div>
+        <div class="tile"><b id="tPace">5:30/km</b><small>Avg. Pace</small></div>
+      </div>
+      <p class="note" id="predNote"></p>
+      <details><summary>Change goal (finish time)</summary>
+        <p class="note" style="margin:6px 0">Enter your goal as h:mm:ss, e.g. 1:55:00. Avg. Pace and the pace plan are calculated from it.</p>
+        <div class="frow"><input id="goalIn" inputmode="numeric" placeholder="1:56:00"><button class="btn grad" id="goalBtn">Update</button></div>
+      </details>
+    </section>
+
+    <section class="card">
+      <div class="ch"><h2>Latest performance</h2><span class="hint" id="perfDate"></span></div>
+      <div class="tiles">
+        <div class="tile"><b id="pKm">–</b><small>km</small></div>
+        <div class="tile"><b id="pPace">–</b><small>min/km</small></div>
+        <div class="tile"><b id="pTot">–</b><small>km total</small></div>
+        <div class="tile"><b id="pAvg">–</b><small>avg. pace</small></div>
+      </div>
+      <details id="resDet"><summary>+ Add run result</summary>
+        <label>Date</label><input type="date" id="rDate">
+        <div class="frow">
+          <div><label>Distance km</label><input id="rKm" inputmode="decimal" placeholder="10.15"></div>
+          <div><label>Avg. pace</label><input id="rPace" inputmode="numeric" placeholder="5:29"></div>
+        </div>
+        <div class="actions"><button class="btn grad" id="rSave">Save result</button></div>
+      </details>
+      <div class="log" id="log"></div>
+    </section>
+  </div>
+
+  <div class="grid two">
+    <section class="card">
+      <div class="ch"><h2>🌤️ Race-day weather</h2><a class="hint" id="wxSrc" href="https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/2-2514256/Spania/Andaluc%C3%ADa/Malaga/M%C3%A1laga" target="_blank" rel="noopener" style="color:var(--acc)">yr.no ↗</a></div>
+      <div class="tiles" id="wxTiles"><div class="tile"><b>…</b><small>Loading</small></div></div>
+      <p class="note" id="wxNote"></p>
+    </section>
+    <section class="card">
+      <div class="ch"><h2>📈 Progress</h2><span class="hint" id="progHint"></span></div>
+      <svg id="volSvg" viewBox="0 0 600 170" role="img" aria-label="Km per week"></svg>
+      <div class="legend"><span><i style="background:#2b3a55;border-radius:3px"></i>Planned</span><span><i style="background:linear-gradient(135deg,#4fc3f7,#7c5cf2);border-radius:3px"></i>Run</span><span id="phase"></span></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="ch">
+      <h2>Training calendar</h2>
+      <div class="calbar">
+        <div class="seg"><button data-view="week">This week</button><button data-view="month">Month</button></div>
+        <button class="btn sm grad" id="icsBtn">📅 Export<span class="badge" id="chgBadge"></span></button>
+        <div class="nav"><button class="btn sm" id="prev" aria-label="Previous">←</button><button class="btn sm" id="thisW">Today</button><button class="btn sm" id="next" aria-label="Next">→</button></div>
+      </div>
+      <div class="drag-hint">🖐️ Drag a run to another day (mobile: press and hold) · ✎ edit · + add</div>
+    </div>
+    <div class="range" id="range"></div>
+    <div class="weeksum"><span id="wsTxt"></span><span id="wsDone"></span></div>
+    <div class="prog"><span id="wsBar"></span></div>
+    <div class="week" id="week"></div>
+  </section>
+
+  <section class="card">
+    <div class="ch"><h2 id="routeTitle">Málaga route</h2>
+      <div class="seg"><button class="on" data-map="svg">Route map</button><button data-map="gm">Google Maps</button></div></div>
+    <div id="mapSvgWrap">
+      <div class="seg" style="margin-bottom:8px"><button class="on" data-zoom="all">Whole route</button><button data-zoom="west">Centre &amp; port</button><button data-zoom="east">Coast to El Palo</button></div>
+      <div class="routebox">
+        <svg id="routeSvg" viewBox="0 0 1000 330" role="img" aria-label="Race route"></svg>
+        <svg id="eleSvg" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-label="Elevation and pace plan"></svg>
+        <div class="kmbar"><input type="range" id="kmSlider" min="0" max="21.1" step="0.1" value="0" aria-label="Kilometre"><div id="kmInfo"></div></div>
+      </div>
+      <div class="legend"><span><i style="background:#a78bfa"></i>Elevation</span><span><i style="background:#c6f432"></i>Planned pace (higher = faster)</span><span><i style="background:var(--water)"></i>Water</span><span><i style="background:var(--gel)"></i>Gel</span><span><i style="background:var(--iso)"></i>Sports drink</span><span id="approxLeg" hidden><i style="background:#f472b6;border-radius:2px"></i>Approximate route</span></div>
+      <p class="note" id="trackNote"></p>
+    </div>
+    <div id="mapGmWrap" style="display:none">
+      <iframe class="map" id="gmFrame" title="Google Maps route" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <p class="mapnote">Google draws a walking route through points from the GPS track, so the line may differ slightly from the race route. If the frame is empty, the app you opened the file in blocks embedded maps. Use the button below instead.</p>
+    </div>
+
+    <h3 class="sub">🏃 Pace plan per km <span class="hint" id="planHint"></span></h3>
+    <p class="note" style="margin-top:4px">Even effort, not even pace: a slightly calmer first km in the start crowd, a few seconds for drinking at aid stations and for 180° turns, and adjusted for climbs and descents. All splits add up exactly to your goal. Tap a km to see it on the map.</p>
+    <div class="strip" id="strip"></div>
+
+    <h3 class="sub">⚡ Fuelling plan at the aid stations</h3>
+    <div class="fuel" id="fuel"></div>
+    <p class="mapnote">Times come from your pace plan. Only use gels you have tried in training, e.g. on the long runs. Eat breakfast 2–3 hours before the start.</p>
+
+    <div class="rstats">
+      <div><b id="rsDist">–</b><small>GPS length</small></div>
+      <div><b id="rsGain">–</b><small>Ascent (smoothed)</small></div>
+      <div><b id="rsMax">–</b><small>Highest point</small></div>
+      <div><b id="rsPace">–</b><small>Avg. Pace</small></div>
+    </div>
+    <div class="maplinks">
+      <a class="btn sm grad" id="gmOpen" target="_blank" rel="noopener">Open in Google Maps ↗</a>
+      <button class="btn sm" id="dlKml">⬇ KML (Google My Maps)</button>
+      <button class="btn sm" id="dlGpx">⬇ GPX (watch)</button>
+      <label class="btn sm filebtn">⬆ Import GPX<input type="file" id="gpxIn" accept=".gpx,application/gpx+xml,application/xml,text/xml" hidden></label>
+      <button class="btn sm" id="gpxReset" hidden>↺ Use built-in route</button>
+    </div>
+    <p class="mapnote" id="srcNote"></p>
+    <div class="facts" id="facts"></div>
+  </section>
+
+  <div class="grid two">
+    <section class="card" id="bandCard">
+      <div class="ch"><h2>⏱️ Pace band</h2><button class="btn sm" id="printBand">🖨️ Print</button></div>
+      <p class="note" style="margin:0 0 8px">Cumulative split and clock time per km from the pace plan. Type another goal time to try it out.</p>
+      <div class="frow" style="margin-bottom:8px"><input id="bandGoal" inputmode="numeric" placeholder="1:56:00"><select id="bandWave"></select></div>
+      <div class="band" id="band"></div>
+    </section>
+    <section class="card">
+      <div class="ch"><h2>✅ Race checklist</h2><span class="hint" id="chkCount"></span></div>
+      <div id="checklist"></div>
+      <button class="btn sm" id="chkReset" style="margin-top:10px">Reset</button>
+    </section>
+  </div>
+
+  <p class="foot" id="foot">Data is stored locally in your browser. No account or server needed.</p>
+  <p class="foot" style="margin-top:6px"><button class="btn sm grad" id="shareApp">🔗 Share app</button> <button class="btn sm" id="installApp" hidden>📲 Install app</button> <button class="btn sm" id="bkOut">⬇ Back up data</button> <label class="btn sm filebtn">⬆ Restore backup<input type="file" id="bkIn" accept=".json,application/json" hidden></label></p>
+</div>
+
+<div class="sheetbg" id="sheetBg"></div>
+<section class="sheet" id="editCard" aria-hidden="true">
+  <div class="grab"></div>
+  <div class="ch"><h2 id="eTitle">Add run</h2><button class="x" id="sheetX" aria-label="Close">✕</button></div>
+  <div class="frow">
+    <div><label>Date</label><input type="date" id="fDate"></div>
+    <div><label>Type</label><select id="fType"><option value="easy">Easy</option><option value="tempo">Tempo</option><option value="pace">Race pace</option><option value="long">Long run</option><option value="shake">Shake-out</option><option value="race">Race</option><option value="other">Other plan</option></select></div>
+  </div>
+  <label>Title</label><input id="fTitle" placeholder="e.g. Easy run">
+  <div class="frow" id="runFields">
+    <div><label>Distance km</label><input id="fKm" inputmode="decimal"></div>
+    <div><label>Pace for the run</label><input id="fPace" inputmode="numeric" placeholder="6:15"></div>
+  </div>
+  <label>Start time (used for calendar export)</label><input type="time" id="fTime" step="300">
+  <label>Note</label><textarea id="fNote" rows="2"></textarea>
+  <div class="actions">
+    <button class="btn grad" id="fSave">Save run</button>
+    <button class="btn" id="fClear">Cancel</button>
+    <button class="btn del" id="fDel" style="display:none;margin-left:auto">Delete</button>
+  </div>
+</section>
+
+<section class="sheet" id="icsSheet" aria-hidden="true">
+  <div class="grab"></div>
+  <div class="ch"><h2>📅 Export to calendar</h2><button class="x" id="icsX" aria-label="Close">✕</button></div>
+  <p class="note" id="icsStatus" style="margin-top:0"></p>
+  <div class="frow">
+    <div><label>Reminder</label><select id="icsAlarm"><option value="0">None</option><option value="15">15 min before</option><option value="30">30 min before</option><option value="60">1 hour before</option><option value="120">2 hours before</option><option value="720">The evening before (12 h)</option></select></div>
+    <div><label>Default start time</label><input type="time" id="icsTime" step="300"></div>
+  </div>
+  <label class="chk"><input type="checkbox" id="icsOther" checked> Include other plans</label>
+  <label class="chk"><input type="checkbox" id="icsDone" checked> Include completed runs (with your result)</label>
+  <div class="actions" style="flex-direction:column">
+    <button class="btn grad" id="icsAll">⬇ Download the whole plan (.ics)</button>
+    <button class="btn" id="icsChg">⬇ Only changes since last export</button>
+    <button class="btn" id="icsShare" style="display:none">📤 Share / open in Calendar</button>
+  </div>
+  <details><summary>How to update your calendar</summary>
+    <div class="help">
+      <p><b>Every run has a fixed ID</b> in the file, and its version number goes up when you move, edit or delete it. When you import a new file, calendars that support IDs update the existing run instead of adding a copy. Deleted runs are sent as <b>cancelled</b>.</p>
+      <p><b>iPhone / Mac:</b> Open the .ics file and choose <i>Add All</i> to the same calendar every time.</p>
+      <p><b>Outlook:</b> Create a calendar called "Road to Málaga" and import the file into it. If Outlook creates duplicates, delete that calendar and import the whole plan again.</p>
+      <p><b>Google Calendar:</b> Settings → Import. Use a separate "Running" calendar that you can delete and re-import.</p>
+      <p>An automatically synced subscription calendar needs the file on a server, which this offline app can't do.</p>
+    </div>
+  </details>
+</section>
+<div class="toast" id="toast"></div>
+<script>
+const store=(()=>{const mem={};let ok=false;try{localStorage.setItem("__t","1");localStorage.removeItem("__t");ok=true}catch(e){}
+  return{get:k=>{try{return ok?localStorage.getItem(k):(mem[k]??null)}catch(e){return mem[k]??null}},set:(k,v)=>{try{ok?localStorage.setItem(k,v):mem[k]=v}catch(e){mem[k]=v}},ok:()=>ok}})();
+const KEY="malaga_hm_planner_v2";
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const pISO=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c)};
+const add=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const monday=d=>{const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x};
+const sec=p=>{const m=String(p||"").trim().match(/^(\d{1,2})[:.,](\d{2})$/);return m?+m[1]*60+ +m[2]:null};
+const fP=s=>{if(s==null||isNaN(s))return"–";s=Math.round(s);return `${Math.floor(s/60)}:${pad(s%60)}`};
+const fT=s=>{s=Math.round(s);return `${Math.floor(s/3600)}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`};
+const fTs=s=>fT(s).replace(/^0:/,"");
+const parseT=v=>{const p=String(v||"").trim().split(/[:.]/).map(Number);if(!p.length||p.some(isNaN))return null;if(p.length===3)return p[0]*3600+p[1]*60+p[2];if(p.length===2)return p[0]*3600+p[1]*60;return null};
+const num=v=>{const n=parseFloat(String(v).replace(",","."));return isNaN(n)?null:n};
+const dk=(n,d=2)=>n==null||isNaN(n)?"–":(+n).toFixed(d);
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONL=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const fD=s=>{const d=pISO(s);return `${DAYS[(d.getDay()+6)%7]} ${d.getDate()} ${MON[d.getMonth()]}`};
+const uid=()=>Math.random().toString(36).slice(2,9);
+const toast=t=>{const e=$("#toast");e.textContent=t;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),2000)};
+const COL={easy:"--easy",tempo:"--tempo",pace:"--pace",long:"--long",shake:"--shake",race:"--race",other:"--other"};
+const TYPE={easy:"Easy",tempo:"Tempo",pace:"Race pace",long:"Long run",shake:"Shake-out",race:"Race",other:"Plan"};
+
+/* ---------- race definitions ---------- */
+const RACES={
+  half:{key:"half",name:"Half Marathon",short:"Half",dist:21.0975,label:"21.1 km",limit:2.75*3600,limitTxt:"2:45 from the last wave",
+    waves:[["08:30","Wave 1","elite – sub 1:30"],["08:40","Wave 2","1:30–1:45"],["08:50","Wave 3","1:45–2:30"]],waveFor:t=>t<5400?0:t<6300?1:2,
+    aid:[5,10,15,18],gels:[9.5,14.5],finish:"Av. Cánovas del Castillo (La Malagueta bullring)",fee:"€98 (VIP €258)",
+    pacers:"1:30 · 1:38 · 1:45 · 1:53 · 2:00 · 2:08 · 2:15",cut:{5:"0:39:05",10:"1:18:10",15:"1:57:15",20:"2:36:00"},defGoal:6960,
+    fuel:[{k:5,kind:"water",t:"Water",d:"2–3 sips, even if you're not thirsty. No gel yet."},
+      {k:10,kind:"gel",t:"Gel + water",d:"Gel 1 at ~km 9.5, then wash it down with water at the station."},
+      {k:15,kind:"gel",t:"Gel + water",d:"Gel 2 at ~km 14.5, then water. Skip the fruit."},
+      {k:18,kind:"iso",t:"Sports drink",d:"Isotonic in small sips for the last 3 km."}]},
+  full:{key:"full",name:"Marathon",short:"Marathon",dist:42.195,label:"42.2 km",limit:5.5*3600,limitTxt:"5:30 from the last wave",
+    waves:[["08:30","Wave 1","elite – sub 3:15"],["08:40","Wave 2","3:15–4:00"],["08:50","Wave 3","4:00–5:30"]],waveFor:t=>t<11700?0:t<14400?1:2,
+    aid:[5,10,15,18,21,25,27.5,30,32.5,35,37.5,40],gels:[9.5,17.5,24.5,29.5,34.5],finish:"Paseo del Parque (same as the start)",fee:"€140 (VIP €280)",
+    pacers:"3:00 · 3:15 · 3:30 · 3:45 · 4:00 · 4:15 · 4:30",cut:null,defGoal:15300,
+    fuel:[{k:5,kind:"water",t:"Water",d:"A few sips. No gel yet."},
+      {k:10,kind:"gel",t:"Gel 1 + water",d:"Gel at ~km 9.5, wash down here."},
+      {k:15,kind:"iso",t:"Sports drink",d:"Isotonic. Solid food is offered from here – only take what you've tested."},
+      {k:18,kind:"gel",t:"Gel 2 + water",d:"Gel at ~km 17.5."},
+      {k:21,kind:"water",t:"Water",d:"Halfway – check your split against the plan."},
+      {k:25,kind:"gel",t:"Gel 3 + water",d:"Gel at ~km 24.5."},
+      {k:27.5,kind:"iso",t:"Sports drink",d:"Small sips of isotonic."},
+      {k:30,kind:"gel",t:"Gel 4 + water",d:"Gel at ~km 29.5. The wall is near – keep the pace calm."},
+      {k:32.5,kind:"water",t:"Water",d:"Water, a few sips."},
+      {k:35,kind:"gel",t:"Gel 5 + water",d:"Last gel at ~km 34.5."},
+      {k:37.5,kind:"iso",t:"Sports drink",d:"Isotonic for the final push."},
+      {k:40,kind:"water",t:"Water",d:"Small sips – 2 km to go."}]}};
+
+/* ---------- training plans ---------- */
+const R=(date,type,title,km,pace,note,x={})=>({id:uid(),date,type,title,km,pace,note,aKm:null,aPace:null,time:"",seq:0,upd:0,...x});
+const BENCH=()=>R("2026-10-05","easy","Benchmark",10.15,"5:29","Felt easy – could have run 1–2 km more.",{aKm:10.15,aPace:"5:29"});
+const REG=()=>R("2026-11-02","other","Online registration closes 20:00",null,null,"Check that your entry is confirmed.");
+function planHalf(){return[
+  R("2026-10-07","easy","Easy run",6,"6:20","Relaxed, conversational pace."),
+  R("2026-10-09","pace","Race pace intro",8,"5:50","2 km warm-up · 3×1.5 km @ race pace (2 min jog) · cool-down."),
+  R("2026-10-11","long","Long run",12,"6:10","Even pace throughout. Practise drinking on the run."),
+  R("2026-10-13","easy","Easy + strides",7,"6:20","Finish with 4×20 s strides."),
+  R("2026-10-15","tempo","Tempo run",9,"5:40","2 km easy · 5 km ~15 s/km faster than race pace · 2 km easy."),
+  R("2026-10-18","long","Long run",15,"6:05","Last 3 km @ race pace. Test a gel at km 9.5."),
+  R("2026-10-20","easy","Easy + strides",7,"6:20","6×20 s strides."),
+  R("2026-10-22","pace","Race pace blocks",10,"5:45","2 km easy · 2×4 km @ race pace (3 min jog) · cool-down."),
+  R("2026-10-25","long","PEAK long run",18,"6:05","Longest run. Gels at km 9.5 and 14.5, just like race day."),
+  R("2026-10-27","easy","Easy run",7,"6:20","Very easy – recovery."),
+  R("2026-10-29","pace","Dress rehearsal",10,"5:35","1.5 km easy · 7 km @ race pace · 1.5 km easy. Race kit and race breakfast."),
+  R("2026-11-01","long","Long run (shorter)",14,"6:05","Comfortable. Last 2 km @ race pace."),
+  R("2026-11-03","easy","Easy + strides",6,"6:20","4×20 s. Legs should feel fresh."),
+  R("2026-11-05","pace","Sharpener",6,"5:45","1.5 km easy · 3 km @ race pace · 1.5 km easy."),
+  R("2026-11-07","shake","Shake-out in Málaga",3,"6:30","Short jog + 3 strides. Collect your bib (Cruise Terminal B)."),
+  R("2026-11-08","race","🏁 Málaga Half",21.1,"","Start in your wave · Paseo del Parque. Follow the pace plan. Gels at km 9.5 & 14.5.",{time:"08:50"})]}
+function planFull(){return[
+  R("2026-10-07","easy","Easy run",8,"6:30","Relaxed, conversational pace."),
+  R("2026-10-09","pace","Marathon pace",10,"6:10","2 km easy · 6 km @ marathon pace · 2 km easy."),
+  R("2026-10-11","long","Long run",16,"6:40","Very easy. Walk 1 min every 5 km if needed. Practise a gel."),
+  R("2026-10-13","easy","Easy run",8,"6:30","Easy."),
+  R("2026-10-15","tempo","Steady run",10,"5:55","2 km easy · 6 km steady · 2 km easy."),
+  R("2026-10-17","easy","Easy run",6,"6:35","Short and easy before the long run."),
+  R("2026-10-18","long","Long run",20,"6:40","Gel every ~40 min. Practise race fuelling."),
+  R("2026-10-20","easy","Easy + strides",8,"6:30","4×20 s strides."),
+  R("2026-10-22","pace","Marathon pace",12,"6:10","2 km easy · 8 km @ marathon pace · 2 km easy."),
+  R("2026-10-24","easy","Easy run",6,"6:35","Short and easy."),
+  R("2026-10-25","long","PEAK long run",24,"6:45","Longest run. Run-walk is fine. Full race fuelling and race kit."),
+  R("2026-10-27","easy","Recovery run",6,"6:40","Very easy."),
+  R("2026-10-29","pace","Dress rehearsal",12,"6:15","2 km easy · 8 km @ marathon pace · 2 km easy. Race breakfast."),
+  R("2026-11-01","long","Long run (shorter)",16,"6:40","Comfortable."),
+  R("2026-11-03","easy","Easy + strides",8,"6:30","4×20 s. Legs should feel fresh."),
+  R("2026-11-05","pace","Sharpener",6,"6:10","1.5 km easy · 3 km @ marathon pace · 1.5 km easy."),
+  R("2026-11-07","shake","Shake-out in Málaga",3,"6:45","Short jog. Collect your bib (Cruise Terminal B)."),
+  R("2026-11-08","race","🏁 Málaga Marathon",42.2,"","Start in your wave · Paseo del Parque. Follow the pace plan. 5 gels: km 9.5 · 17.5 · 24.5 · 29.5 · 34.5.",{time:"08:50"})]}
+function defPlan(){return{race:"half",goals:{half:6960,full:15300},ev:[BENCH(),...planHalf(),REG()]}}
+
+let S;try{S=JSON.parse(store.get(KEY))}catch(e){}
+if(!S||!S.ev)S=defPlan();
+/* migration from earlier (Danish) versions */
+const DA={"Langtur":"Long run","Tempoløb":"Tempo run","Race pace blokke":"Race pace blocks","PEAK langtur":"PEAK long run","Generalprøve":"Dress rehearsal",
+ "Langtur (kortere)":"Long run (shorter)","Skarphed":"Sharpener","Shake-out i Málaga":"Shake-out in Málaga","Tilmelding lukker 20:00":"Online registration closes 20:00","Ekstra løb":"Extra run"};
+const DANOTES={"Føltes let – kunne have løbet 1–2 km mere.": "Felt easy – could have run 1–2 km more.", "Rolig snakketempo.": "Relaxed, conversational pace.", "2 km opvarm · 3×1,5 km @ 5:30 (2 min jog) · nedløb.": "2 km warm-up · 3×1.5 km @ race pace (2 min jog) · cool-down.", "Jævnt tempo hele vejen. Øv at drikke undervejs.": "Even pace throughout. Practise drinking on the run.", "Afslut med 4×20 sek. stigningsløb.": "Finish with 4×20 s strides.", "2 km easy · 5 km @ 5:20 · 2 km easy.": "2 km easy · 5 km ~15 s/km faster than race pace · 2 km easy.", "Sidste 3 km @ 5:30. Test gel ved km 9,5.": "Last 3 km @ race pace. Test a gel at km 9.5.", "6×20 sek. stigningsløb.": "6×20 s strides.", "2 km easy · 2×4 km @ 5:30 (3 min jog) · nedløb.": "2 km easy · 2×4 km @ race pace (3 min jog) · cool-down.", "Længste tur. Gel ved km 9,5 og 14,5 som på race day.": "Longest run. Gels at km 9.5 and 14.5, just like race day.", "Helt roligt – restitution.": "Very easy – recovery.", "1,5 km easy · 7 km @ 5:30 · 1,5 km easy. Racetøj og -morgenmad.": "1.5 km easy · 7 km @ race pace · 1.5 km easy. Race kit and race breakfast.", "Behageligt. Sidste 2 km @ 5:30.": "Comfortable. Last 2 km @ race pace.", "4×20 sek. Benene skal føles friske.": "4×20 s. Legs should feel fresh.", "1,5 km easy · 3 km @ 5:30 · 1,5 km easy.": "1.5 km easy · 3 km @ race pace · 1.5 km easy.", "Kort jog + 3 stigningsløb. Hent startnummer (Cruise Terminal B).": "Short jog + 3 strides. Collect your bib (Cruise Terminal B).", "Bølge 3 kl. 08:50 · Paseo del Parque. Jævnt fra km 1. Gel ved km 9,5 & 14,5.": "Start in your wave · Paseo del Parque. Follow the pace plan. Gels at km 9.5 & 14.5."};
+const DAN={"Føltes let – kunne have løbet 1–2 km mere.":"Felt easy – could have run 1–2 km more.","Tjek at tilmeldingen er bekræftet.":"Check that your entry is confirmed."};
+S.ev.forEach(e=>{if(DA[e.title])e.title=DA[e.title];if(DAN[e.note])e.note=DAN[e.note];
+  if(DANOTES[e.note])e.note=DANOTES[e.note];if(e.type==="race"&&/Bølge|Jævnt/.test(e.note||""))e.note=planHalf().slice(-1)[0].note});
+S.race=S.race||"half";S.goals=S.goals||{half:S.goalT||6960,full:15300};
+S.deleted=S.deleted||[];S.lastExport=S.lastExport||0;S.alarm=S.alarm??"60";if(!S.defTime||S.defTime==="07:00")S.defTime="17:30";S.check=S.check||{};S.gpx=S.gpx||{};
+S.ev.forEach(e=>{if(e.seq==null)e.seq=0;if(e.upd==null)e.upd=0;if(e.time==null)e.time=e.type==="race"?"08:50":""});
+const RC=()=>RACES[S.race];
+const goalT=()=>S.goals[S.race];
+const goalPace=()=>goalT()/RC().dist;
+const waveIdx=()=>RC().waveFor(goalT());
+const waveTime=()=>RC().waves[waveIdx()][0];
+const bump=e=>{e.seq=(e.seq||0)+1;e.upd=Date.now()};
+const tomb=e=>S.deleted.push({id:e.id,title:e.title,date:e.date,time:e.time||"",type:e.type,seq:(e.seq||0)+1,upd:Date.now()});
+const save=()=>store.set(KEY,JSON.stringify(S));
+function syncRaceEvent(){const r=S.ev.find(e=>e.type==="race");if(!r)return;const c=RC(),t=`🏁 Málaga ${c.short}`,km=c.key==="full"?42.2:21.1,p=fP(goalPace()),tm=waveTime();
+  if(r.title!==t||r.km!==km||r.pace!==p||r.time!==tm){r.title=t;r.km=km;r.pace=p;r.time=tm;bump(r)}}
+syncRaceEvent();save();
+
+/* countdown */
+const RACE=Date.UTC(2026,10,8,7,30);
+function tick(){const d=RACE-Date.now();
+  if(d<=0){$("#cd").innerHTML=`<div><b>RACE DAY 🏁</b><small>¡Vamos!</small></div>`;return}
+  $("#cd").innerHTML=[[Math.floor(d/864e5),"Days"],[Math.floor(d%864e5/36e5),"Hours"],[Math.floor(d%36e5/6e4),"Min"],[Math.floor(d%6e4/1e3),"Sec"]].map(([n,l])=>`<div><b>${pad(n)}</b><small>${l}</small></div>`).join("")}
+tick();setInterval(tick,1000);
+
+/* ---------- race switch ---------- */
+$$("[data-race]").forEach(b=>b.onclick=()=>{const to=b.dataset.race;if(to===S.race)return;
+  S.race=to;const c=RC();
+  if(confirm(`Switch the training plan to the 5-week ${c.name.toLowerCase()} plan?\n\nYour logged runs and your own plans are kept. Choose Cancel to keep your current training plan and only switch the race.`)){
+    const keep=S.ev.filter(e=>e.aKm||e.type==="other");S.ev.filter(e=>!keep.includes(e)).forEach(tomb);
+    const fresh=(to==="full"?planFull():planHalf()).filter(n=>!keep.some(k=>k.date===n.date&&k.type!=="other"));fresh.forEach(bump);S.ev=[...keep,...fresh]}
+  syncRaceEvent();save();resetBandGoal();window.onRaceChange&&onRaceChange();renderAll();toast(`Switched to the ${c.name} · goal ${fT(goalT())}`)});
+
+/* ---------- calendar: week / month ---------- */
+const PLAN_MIN=monday(new Date(2026,9,5)),PLAN_MAX=monday(new Date(2026,10,8));
+const MON_MIN=new Date(2026,9,1),MON_MAX=new Date(2026,10,1);
+const clampW=w=>w<PLAN_MIN?PLAN_MIN:w>PLAN_MAX?PLAN_MAX:w;
+const clampM=m=>m<MON_MIN?new Date(MON_MIN):m>MON_MAX?new Date(MON_MAX):m;
+const firstOf=d=>new Date(d.getFullYear(),d.getMonth(),1);
+let wk=clampW(monday(new Date())),mon=clampM(firstOf(new Date())),selId=null;
+let view=S.calView||(window.matchMedia("(min-width:768px)").matches?"month":"week");
+function weekNo(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7)}
+function evH(x,mini){const done=x.aKm&&x.aPace;
+  const m=x.type==="other"?(x.note||""):done?`${dk(x.aKm)} km · ${x.aPace}`:`${x.km!=null?dk(x.km,1):"–"} km · ${x.pace||"–"}`;
+  return `<div class="ev ${mini?"mini":""} ${done?"done":""} ${x.id===selId?"sel":""}" draggable="true" data-id="${x.id}" style="--c:var(${COL[x.type]})" title="${x.title} – ${m}"><div class="body"><div class="t">${x.title}</div><div class="m">${m}</div>${mini?`<div class="k">${x.type==="other"?"📌":x.type==="race"?"🏁":(+(done?x.aKm:x.km)).toFixed((done?x.aKm:x.km)%1?1:0)}</div>`:""}</div><button class="edit" data-edit="${x.id}" aria-label="Edit">✎</button></div>`}
+function sums(dates){const runs=S.ev.filter(x=>x.type!=="other"&&dates.includes(x.date));
+  const pl=runs.reduce((a,x)=>a+(x.km||0),0),dn=runs.reduce((a,x)=>a+(x.aKm||0),0);
+  $("#wsTxt").textContent=`Planned: ${dk(pl,1)} km`;$("#wsDone").textContent=`Run: ${dk(dn,1)} km`;
+  $("#wsBar").style.width=(pl?Math.min(100,dn/pl*100):0)+"%"}
+function renderWeekView(){
+  const days=[...Array(7)].map((_,i)=>iso(add(wk,i))),today=iso(new Date()),e=add(wk,6);
+  $("#range").textContent=`Week ${weekNo(wk)} · ${wk.getDate()} ${MON[wk.getMonth()]} – ${e.getDate()} ${MON[e.getMonth()]} ${e.getFullYear()}`;
+  sums(days);W.className="week";
+  W.innerHTML=days.map((ds,i)=>{const evs=S.ev.filter(x=>x.date===ds);
+    return `<div class="day ${ds===today?"today":""} ${ds<today?"past":""}" data-date="${ds}"><div class="dl"><small>${DAYS[i]}</small><b>${pISO(ds).getDate()}</b></div><div class="evs">${evs.length?evs.map(x=>evH(x)).join(""):`<span class="empty">Rest</span>`}</div><button class="addd" data-add="${ds}" aria-label="Add">+</button></div>`}).join("");
+  $("#prev").disabled=wk<=PLAN_MIN;$("#next").disabled=wk>=PLAN_MAX}
+function renderMonthView(){
+  const y=mon.getFullYear(),m=mon.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0),today=iso(new Date());
+  $("#range").textContent=`${MONL[m]} ${y}`;
+  const inMonth=[];for(let d=new Date(first);d<=last;d=add(d,1))inMonth.push(iso(d));sums(inMonth);
+  let h=DAYS.map(x=>`<div class="mhd">${x}</div>`).join(""),d=monday(first);const end=add(monday(last),6);
+  while(d<=end){const ds=iso(d),evs=S.ev.filter(x=>x.date===ds),isMon=(d.getDay()+6)%7===0;
+    h+=`<div class="day ${d.getMonth()!==m?"out":""} ${ds===today?"today":""} ${ds<today?"past":""}" data-date="${ds}"><div class="mtop"><b>${d.getDate()}${isMon?`<span class="wn">W${weekNo(d)}</span>`:""}</b><button class="addd" data-add="${ds}" aria-label="Add">+</button></div>${evs.map(x=>evH(x,true)).join("")}</div>`;
+    d=add(d,1)}
+  W.className="week month";W.innerHTML=h;
+  $("#prev").disabled=mon<=MON_MIN;$("#next").disabled=mon>=MON_MAX}
+function renderCal(){$$("[data-view]").forEach(b=>b.classList.toggle("on",b.dataset.view===view));view==="month"?renderMonthView():renderWeekView()}
+$$("[data-view]").forEach(b=>b.onclick=()=>{view=b.dataset.view;S.calView=view;save();renderCal()});
+$("#prev").onclick=()=>{if(view==="month")mon=clampM(new Date(mon.getFullYear(),mon.getMonth()-1,1));else wk=clampW(add(wk,-7));renderCal()};
+$("#next").onclick=()=>{if(view==="month")mon=clampM(new Date(mon.getFullYear(),mon.getMonth()+1,1));else wk=clampW(add(wk,7));renderCal()};
+$("#thisW").onclick=()=>{wk=clampW(monday(new Date()));mon=clampM(firstOf(new Date()));renderCal()};
+function goTo(ds){const d=pISO(ds);wk=clampW(monday(d));mon=clampM(firstOf(d))}
+function move(id,date){const x=S.ev.find(e=>e.id===id);if(!x||x.date===date)return;x.date=date;bump(x);save();renderAll();toast(`Moved to ${fD(date)}`)}
+
+const W=$("#week");let dId=null;
+W.addEventListener("dragstart",e=>{const v=e.target.closest(".ev");if(!v)return;dId=v.dataset.id;v.classList.add("dragging");try{e.dataTransfer.setData("text/plain",dId)}catch(_){}});
+W.addEventListener("dragend",()=>$$(".dragging,.over").forEach(n=>n.classList.remove("dragging","over")));
+W.addEventListener("dragover",e=>{const d=e.target.closest(".day");if(!d)return;e.preventDefault();$$(".day.over").forEach(n=>n!==d&&n.classList.remove("over"));d.classList.add("over")});
+W.addEventListener("drop",e=>{const d=e.target.closest(".day");if(d&&dId){e.preventDefault();move(dId,d.dataset.date)}dId=null});
+let tm=null,tId=null,ghost=null,dragging=false,justDragged=false,overDay=null,sx0=0,sy0=0,src=null;
+W.addEventListener("touchstart",e=>{const v=e.target.closest(".ev");if(!v||e.touches.length>1||e.target.closest(".edit"))return;
+  const t=e.touches[0];tId=v.dataset.id;sx0=t.clientX;sy0=t.clientY;src=v;v.setAttribute("draggable","false");
+  tm=setTimeout(()=>{tm=null;dragging=true;v.classList.add("dragging");ghost=v.cloneNode(true);ghost.classList.add("ghost");ghost.style.width=Math.max(120,v.offsetWidth)+"px";document.body.appendChild(ghost);pos(sx0,sy0);try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}},350)},{passive:true});
+function pos(x,y){if(ghost){ghost.style.left=(x-ghost.offsetWidth/2)+"px";ghost.style.top=(y-ghost.offsetHeight-12)+"px"}}
+W.addEventListener("touchmove",e=>{const t=e.touches[0];
+  if(!dragging){if(tm&&Math.hypot(t.clientX-sx0,t.clientY-sy0)>10){clearTimeout(tm);tm=null}return}
+  if(e.cancelable)e.preventDefault();pos(t.clientX,t.clientY);
+  ghost.style.display="none";const el=document.elementFromPoint(t.clientX,t.clientY);ghost.style.display="";
+  const d=el&&el.closest(".day");if(overDay&&overDay!==d)overDay.classList.remove("over");overDay=d||null;if(d)d.classList.add("over");
+  if(t.clientY<70)window.scrollBy(0,-12);else if(t.clientY>innerHeight-70)window.scrollBy(0,12)},{passive:false});
+function endTouch(e){clearTimeout(tm);tm=null;if(src){src.setAttribute("draggable","true");src=null}
+  if(dragging){if(e&&e.cancelable)e.preventDefault();const d=overDay?.dataset.date;ghost?.remove();ghost=null;
+    $$(".dragging,.over").forEach(n=>n.classList.remove("dragging","over"));overDay=null;dragging=false;justDragged=true;setTimeout(()=>justDragged=false,350);if(d)move(tId,d)}}
+W.addEventListener("touchend",endTouch,{passive:false});W.addEventListener("touchcancel",endTouch);
+W.addEventListener("contextmenu",e=>{if(e.target.closest(".ev"))e.preventDefault()});
+W.addEventListener("click",e=>{if(justDragged)return;
+  const a=e.target.closest("[data-add]");if(a){newAt(a.dataset.add);return}
+  const ed=e.target.closest("[data-edit]");if(ed){loadForm(ed.dataset.edit);return}
+  const v=e.target.closest(".ev");if(v){loadForm(v.dataset.id);return}
+  const day=e.target.closest(".week.month .day");if(day)newAt(day.dataset.date)});
+
+/* ---------- edit sheet ---------- */
+function openSheet(){$("#editCard").classList.add("open");$("#sheetBg").classList.add("open");$("#editCard").setAttribute("aria-hidden","false")}
+function closeSheet(){$("#editCard").classList.remove("open");if(!$("#icsSheet").classList.contains("open"))$("#sheetBg").classList.remove("open");$("#editCard").setAttribute("aria-hidden","true")}
+function syncType(){$("#runFields").style.display=$("#fType").value==="other"?"none":""}
+$("#fType").onchange=syncType;
+function newAt(ds){clearForm();$("#fDate").value=ds;openSheet()}
+function loadForm(id){const x=S.ev.find(e=>e.id===id);if(!x)return;selId=id;
+  $("#fDate").value=x.date;$("#fType").value=x.type;$("#fTitle").value=x.title;
+  $("#fKm").value=x.km!=null?String(x.km):"";$("#fPace").value=x.pace||"";$("#fNote").value=x.note||"";$("#fTime").value=x.time||"";
+  $("#eTitle").textContent="Edit run";$("#fDel").style.display="";syncType();renderCal();openSheet()}
+function clearForm(){selId=null;["fDate","fTitle","fKm","fPace","fNote","fTime"].forEach(i=>$("#"+i).value="");$("#fType").value="easy";
+  $("#eTitle").textContent="Add run";$("#fDel").style.display="none";syncType();closeSheet();renderCal()}
+$("#fClear").onclick=clearForm;$("#sheetX").onclick=clearForm;$("#sheetBg").addEventListener("click",()=>{if($("#editCard").classList.contains("open"))clearForm()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#editCard").classList.contains("open"))clearForm()});
+$("#fSave").onclick=()=>{const date=$("#fDate").value,type=$("#fType").value,pace=$("#fPace").value.trim();
+  if(!date)return toast("Pick a date");
+  if(type!=="other"&&pace&&sec(pace)==null)return toast("Pace must be m:ss, e.g. 6:15");
+  const o={date,type,title:$("#fTitle").value.trim()||TYPE[type],km:type==="other"?null:num($("#fKm").value),pace:type==="other"?null:pace,note:$("#fNote").value.trim(),time:$("#fTime").value||"",userNote:true};
+  if(selId){const t=S.ev.find(e=>e.id===selId);Object.assign(t,o);bump(t)}else{const n={id:uid(),aKm:null,aPace:null,seq:0,...o};bump(n);S.ev.push(n)}
+  save();goTo(date);clearForm();renderAll();toast("Run saved ✓")};
+$("#fDel").onclick=()=>{if(!selId||!confirm("Delete this run?"))return;const g=S.ev.find(e=>e.id===selId);if(g)tomb(g);S.ev=S.ev.filter(e=>e.id!==selId);save();clearForm();renderAll();toast("Deleted")};
+
+/* ---------- results + performance ---------- */
+$("#rDate").value=iso(new Date());
+$("#rSave").onclick=()=>{const date=$("#rDate").value,km=num($("#rKm").value),p=$("#rPace").value.trim();
+  if(!date||!km||sec(p)==null)return toast("Fill in date, km and pace (m:ss)");
+  let x=S.ev.find(e=>e.date===date&&e.type!=="other"&&!e.aKm)||S.ev.find(e=>e.date===date&&e.type!=="other");
+  if(!x){x={id:uid(),date,type:"easy",title:"Extra run",km,pace:null,note:"",time:"",seq:0};S.ev.push(x)}
+  x.aKm=km;x.aPace=p;bump(x);save();$("#rKm").value="";$("#rPace").value="";$("#resDet").open=false;renderAll();toast("Result saved 💪")};
+function renderPerf(){const c=RC();
+  const done=S.ev.filter(e=>e.aKm&&sec(e.aPace)).sort((a,b)=>b.date.localeCompare(a.date)),last=done[0];
+  $("#pKm").textContent=last?dk(last.aKm):"–";$("#pPace").textContent=last?last.aPace:"–";$("#perfDate").textContent=last?fD(last.date):"";
+  const tot=done.reduce((a,e)=>a+e.aKm,0),ts=done.reduce((a,e)=>a+e.aKm*sec(e.aPace),0);
+  $("#pTot").textContent=dk(tot,1);$("#pAvg").textContent=tot?fP(ts/tot):"–";
+  $("#log").innerHTML=done.slice(0,5).map(e=>{const d=e.pace&&sec(e.pace)?sec(e.aPace)-sec(e.pace):null;
+    const cl=d==null?"":Math.abs(d)<=10?"good":d<0?"warn":"bad",t=d==null?"":Math.abs(d)<=10?"on target":d<0?`${fP(-d)} faster`:`${fP(d)} slower`;
+    return `<div class="logr" data-id="${e.id}"><div><b>${fD(e.date)}</b> <span>· ${e.title}</span></div><div>${dk(e.aKm)} km · ${e.aPace} <span class="${cl}">${t}</span></div></div>`}).join("");
+  let best=null,srcE=null;done.filter(e=>e.aKm>=5&&e.type!=="race").forEach(e=>{const p=e.aKm*sec(e.aPace)*Math.pow(c.dist/e.aKm,1.06);if(!best||p<best){best=p;srcE=e}});
+  $("#tPred").textContent=best?fT(best):"–";
+  $("#predNote").innerHTML=`ⓘ <b>Predicted</b> is an estimated ${c.label} finish time from your best logged run of at least 5 km (Riegel's formula). `+
+    (srcE?`Right now: ${dk(srcE.aKm)} km @ ${srcE.aPace} (${fD(srcE.date)}) → ${fT(best)} (${fP(best/c.dist)}/km). `+(c.key==="full"?"For the marathon it is usually optimistic until you have done several long runs.":"It is often a bit optimistic before you have done your long runs."):"Log a run of at least 5 km to get an estimate.");
+  const g=goalPace(),w=c.waves[waveIdx()];
+  $("#tDist").textContent=`${c.dist.toFixed(2)} km`;$("#tGoal").textContent=fT(goalT());$("#tPace").textContent=fP(g)+"/km";
+  $("#chipTxt").textContent=`${c.label} @ ${fP(g)}/km`;$("#waveChip").textContent=`🚦 ${w[1]} · ${w[0]} (${w[2]})`;
+  $("#h1").textContent=`${c.name} Run Planner`;document.title=`Málaga ${c.name} Run Planner`;
+  $("#lead").textContent=`Plan, move and log your runs towards ${fT(goalT())}.`;$("#goalIn").value=fT(goalT());$("#goalIn").placeholder=fT(c.defGoal);
+  $("#fullWarn").hidden=c.key!=="full";$$("[data-race]").forEach(b=>b.classList.toggle("on",b.dataset.race===S.race))}
+$("#predTile").onclick=()=>$("#predNote").scrollIntoView({behavior:"smooth",block:"center"});
+$("#log").addEventListener("click",e=>{const r=e.target.closest(".logr");if(r){const x=S.ev.find(v=>v.id===r.dataset.id);if(x){goTo(x.date);loadForm(x.id)}}});
+$("#goalBtn").onclick=()=>{const c=RC(),t=parseT($("#goalIn").value);
+  if(!t||t<c.dist*150||t>c.limit)return toast(`Enter a finish time as h:mm:ss, e.g. ${fT(c.defGoal)} (max ${fT(c.limit)})`);
+  S.goals[S.race]=t;syncRaceEvent();save();resetBandGoal();renderAll();toast(`Goal ${fT(t)} → Avg. Pace ${fP(goalPace())}/km`)};
+function resetBandGoal(){const b=$("#bandGoal");if(b){b.value="";b.placeholder=fT(goalT())}}
+
+/* ---------- Route: built-in Wikiloc GPX (GENERALI Media Maratón Málaga 2025) + optional imported GPX ---------- */
+/* Marathon: km 0–21.2 = Wikiloc GPS track (shared with the half); km 21.2–42.195 drawn from the published Wikiloc landmarks (approximate). [lat,lon,ele,km] */
+/* Marathon: Wikiloc "GENERALI Maratón Málaga 2025" GPS track (Atletismo Málaga), 800 points */
+const FULL_TRACK=[[36.719531,-4.415964,13.3],[36.718084,-4.421051,9.4],[36.716996,-4.425197,13.4],[36.716864,-4.426645,7.7],[36.716863,-4.428164,15.0],[36.716911,-4.428865,14.4],[36.716982,-4.429019,15.4],[36.717041,-4.429133,16.4],[36.717127,-4.429231,18.2],[36.717194,-4.429289,19.6],[36.717266,-4.429313,20.5],[36.717765,-4.429308,16.9],[36.718201,-4.429347,9.1],[36.718324,-4.429342,8.8],[36.718851,-4.429291,14.9],[36.721515,-4.428979,13.8],[36.721542,-4.42895,13.3],[36.721562,-4.428903,12.9],[36.721746,-4.425337,13.1],[36.721734,-4.425309,13.1],[36.721714,-4.425287,13.0],[36.7215,-4.425251,12.6],[36.721019,-4.425212,11.8],[36.72061,-4.425163,10.2],[36.72041,-4.425152,9.7],[36.720203,-4.425158,9.0],[36.719668,-4.425217,10.3],[36.718249,-4.425472,8.9],[36.715851,-4.425709,11.4],[36.715814,-4.425717,11.2],[36.715784,-4.425731,10.9],[36.715778,-4.425756,10.6],[36.715778,-4.425788,10.4],[36.715781,-4.426698,17.4],[36.715911,-4.428319,13.2],[36.716003,-4.429345,18.0],[36.716042,-4.429653,16.5],[36.716058,-4.429983,14.7],[36.716151,-4.431127,17.3],[36.716245,-4.432445,16.6],[36.716258,-4.433122,13.7],[36.716245,-4.433535,13.8],[36.716217,-4.433959,13.3],[36.716167,-4.434397,12.4],[36.71611,-4.434813,12.4],[36.715944,-4.435858,15.2],[36.715874,-4.436188,16.0],[36.715837,-4.436229,15.9],[36.715752,-4.436294,16.2],[36.71565,-4.436308,17.8],[36.715551,-4.436284,19.9],[36.71548,-4.436235,20.8],[36.715419,-4.43617,22.5],[36.715384,-4.436098,24.6],[36.715361,-4.436029,26.9],[36.715196,-4.435324,32.7],[36.714245,-4.432493,9.6],[36.714243,-4.432125,7.0],[36.714126,-4.431777,6.0],[36.71412,-4.431723,6.0],[36.714119,-4.431669,5.9],[36.714138,-4.431589,6.2],[36.714162,-4.431514,6.6],[36.714217,-4.43136,7.1],[36.714285,-4.43118,8.1],[36.714473,-4.430897,8.6],[36.714799,-4.430541,6.8],[36.715354,-4.429916,6.2],[36.715424,-4.429875,6.2],[36.715686,-4.429767,7.0],[36.715813,-4.429352,14.0],[36.71581,-4.428702,14.0],[36.715797,-4.428345,14.6],[36.715776,-4.427985,15.5],[36.715691,-4.426653,16.3],[36.715652,-4.42653,14.1],[36.715636,-4.426505,13.6],[36.715615,-4.426486,12.9],[36.715577,-4.426468,11.9],[36.715435,-4.426414,11.2],[36.714395,-4.426408,9.5],[36.711926,-4.426342,2.8],[36.711928,-4.425708,1.4],[36.711967,-4.425478,2.5],[36.71211,-4.425199,3.5],[36.713921,-4.423406,12.5],[36.717327,-4.420062,5.5],[36.717591,-4.419587,7.1],[36.717676,-4.419319,7.9],[36.718567,-4.416117,8.8],[36.719536,-4.412573,8.2],[36.719545,-4.412458,8.6],[36.719534,-4.412369,9.0],[36.719506,-4.412288,9.4],[36.71945,-4.412232,9.9],[36.719374,-4.412204,10.8],[36.719128,-4.412223,13.7],[36.717804,-4.412401,12.2],[36.717677,-4.412435,11.9],[36.71761,-4.412462,11.8],[36.717504,-4.412512,11.7],[36.717397,-4.412577,10.6],[36.714396,-4.414454,4.2],[36.714268,-4.41463,4.6],[36.714189,-4.414674,5.0],[36.713681,-4.414638,3.5],[36.713454,-4.414564,2.0],[36.710347,-4.413284,0.0],[36.710221,-4.413246,0.1],[36.71011,-4.413223,0.0],[36.70995,-4.413189,0.1],[36.709846,-4.413178,0.1],[36.709682,-4.413174,0.1],[36.709522,-4.413172,0.1],[36.70938,-4.413187,0.1],[36.709224,-4.413214,0.1],[36.709102,-4.41325,0.1],[36.708945,-4.413322,0.0],[36.708748,-4.413432,0.0],[36.708237,-4.413812,0.0],[36.707414,-4.414485,0.0],[36.70734,-4.414528,0.0],[36.707271,-4.41456,0.0],[36.707207,-4.414576,0.0],[36.707113,-4.414586,0.1],[36.707015,-4.414583,0.1],[36.706905,-4.414554,0.1],[36.706778,-4.414491,0.1],[36.706669,-4.414429,0.1],[36.705694,-4.413897,0.1],[36.705544,-4.413861,0.1],[36.705481,-4.413846,0.1],[36.705435,-4.413817,0.0],[36.705407,-4.413746,0.0],[36.705404,-4.413683,0.0],[36.705418,-4.413633,0.1],[36.705451,-4.413584,0.0],[36.705489,-4.413562,0.1],[36.705537,-4.413558,0.0],[36.705589,-4.413569,0.1],[36.705625,-4.413611,0.1],[36.705748,-4.413754,0.1],[36.70648,-4.414201,0.1],[36.706883,-4.414426,0.1],[36.706965,-4.414444,0.1],[36.707031,-4.414453,0.0],[36.707121,-4.414442,0.0],[36.707219,-4.414429,0.1],[36.707311,-4.414407,0.1],[36.707427,-4.414348,0.0],[36.707508,-4.414282,0.1],[36.70757,-4.414196,0.0],[36.707697,-4.413903,0.0],[36.707733,-4.413838,0.0],[36.707789,-4.413821,0.0],[36.707968,-4.413778,0.1],[36.708728,-4.413345,0.1],[36.708985,-4.413204,0.1],[36.709154,-4.413141,0.0],[36.709394,-4.413097,0.0],[36.709601,-4.413082,0.0],[36.709812,-4.413087,0.0],[36.709981,-4.413102,0.0],[36.710249,-4.413163,0.0],[36.710663,-4.413299,0.1],[36.713486,-4.414504,3.1],[36.713677,-4.414551,4.3],[36.713758,-4.414555,4.9],[36.713831,-4.414544,5.4],[36.713958,-4.41449,5.7],[36.714117,-4.414424,5.2],[36.714168,-4.414399,5.0],[36.71431,-4.414365,4.5],[36.714395,-4.414333,4.3],[36.715116,-4.413873,7.1],[36.715152,-4.413838,7.2],[36.715181,-4.413749,7.8],[36.715289,-4.413431,10.1],[36.715378,-4.413187,9.7],[36.715522,-4.412901,6.6],[36.715779,-4.412529,9.5],[36.716588,-4.411573,15.2],[36.717101,-4.410989,17.9],[36.718033,-4.409879,14.9],[36.718087,-4.409793,16.2],[36.71812,-4.409725,16.7],[36.71815,-4.409648,16.1],[36.718176,-4.409566,15.2],[36.718208,-4.40938,13.4],[36.718232,-4.409233,12.5],[36.718338,-4.4089,15.0],[36.718463,-4.408639,21.0],[36.719268,-4.407344,9.0],[36.719429,-4.407026,8.9],[36.719493,-4.406896,7.3],[36.7196,-4.406644,5.1],[36.719881,-4.406005,12.5],[36.720001,-4.405729,9.9],[36.720072,-4.405525,8.1],[36.720117,-4.405387,7.6],[36.720167,-4.405236,7.2],[36.720208,-4.405085,7.4],[36.720296,-4.40472,10.1],[36.720331,-4.404492,11.7],[36.720374,-4.404216,11.2],[36.720414,-4.403707,9.3],[36.720519,-4.402993,9.8],[36.720569,-4.402778,9.2],[36.721378,-4.400277,6.8],[36.72177,-4.398871,5.9],[36.722213,-4.397255,10.6],[36.722845,-4.395426,5.2],[36.722913,-4.395187,5.0],[36.72295,-4.395034,4.4],[36.722969,-4.39493,4.1],[36.723009,-4.394658,3.7],[36.723021,-4.394489,5.1],[36.723021,-4.394243,6.0],[36.723026,-4.393986,6.3],[36.723028,-4.393754,5.9],[36.723024,-4.393351,4.6],[36.722993,-4.393115,5.2],[36.72295,-4.392887,5.6],[36.722867,-4.392637,7.8],[36.722593,-4.391839,4.7],[36.722547,-4.391657,2.5],[36.722526,-4.391536,4.0],[36.722506,-4.391247,6.8],[36.722214,-4.388195,8.0],[36.722188,-4.388008,8.0],[36.722159,-4.387823,8.2],[36.722115,-4.387683,8.9],[36.72194,-4.387272,8.7],[36.72149,-4.386177,10.2],[36.721432,-4.385958,8.6],[36.721401,-4.385736,8.0],[36.721392,-4.385547,9.0],[36.7215,-4.383438,6.7],[36.72148,-4.381655,11.3],[36.721438,-4.380437,10.3],[36.721427,-4.379882,12.3],[36.72153,-4.378419,6.0],[36.721586,-4.37743,6.8],[36.721588,-4.375846,7.4],[36.72153,-4.374806,7.7],[36.721448,-4.37352,8.7],[36.721374,-4.373012,5.8],[36.721337,-4.372833,4.6],[36.720931,-4.371239,3.6],[36.720509,-4.369925,5.3],[36.720158,-4.368766,5.5],[36.720122,-4.368607,7.6],[36.720092,-4.368407,7.7],[36.719908,-4.366028,6.8],[36.719636,-4.3624,9.9],[36.719331,-4.359212,6.1],[36.719022,-4.356971,5.0],[36.718891,-4.356338,6.1],[36.71876,-4.355819,5.1],[36.718641,-4.355408,4.1],[36.718359,-4.354383,5.2],[36.71818,-4.353692,6.3],[36.718033,-4.352941,4.9],[36.717991,-4.352535,5.0],[36.718005,-4.352485,5.1],[36.718034,-4.352453,5.3],[36.718882,-4.352059,11.1],[36.719594,-4.351628,9.6],[36.719619,-4.351618,9.7],[36.719639,-4.35162,9.9],[36.719656,-4.351628,9.8],[36.71968,-4.35165,10.0],[36.719719,-4.351721,10.0],[36.719948,-4.352211,10.8],[36.720002,-4.352336,10.6],[36.72005,-4.352462,10.3],[36.720081,-4.352566,10.1],[36.720104,-4.352661,10.0],[36.720119,-4.352753,10.0],[36.720128,-4.35283,10.1],[36.720136,-4.353037,10.4],[36.720203,-4.353647,12.8],[36.720291,-4.354256,16.0],[36.720372,-4.354782,12.8],[36.720435,-4.355325,14.5],[36.720541,-4.356021,16.9],[36.720585,-4.356317,15.2],[36.720661,-4.356683,14.9],[36.720781,-4.357249,17.7],[36.720814,-4.357414,19.8],[36.720839,-4.357654,21.1],[36.72086,-4.35801,17.9],[36.720908,-4.358466,11.2],[36.720938,-4.35876,9.4],[36.720981,-4.359084,9.0],[36.721015,-4.359347,10.4],[36.721032,-4.359531,11.8],[36.72107,-4.359971,14.9],[36.721087,-4.360365,14.2],[36.721101,-4.360728,12.2],[36.721114,-4.361296,16.0],[36.721145,-4.36162,17.1],[36.721191,-4.361951,15.0],[36.721288,-4.362397,12.6],[36.721368,-4.362682,14.0],[36.721489,-4.363039,18.8],[36.721655,-4.363512,17.6],[36.721758,-4.363824,15.4],[36.721853,-4.36421,14.4],[36.721954,-4.364578,14.6],[36.72204,-4.365026,16.5],[36.722109,-4.36542,19.5],[36.722215,-4.366018,16.0],[36.722269,-4.366415,13.0],[36.722335,-4.366942,10.0],[36.722371,-4.367271,10.6],[36.722387,-4.367656,11.1],[36.722391,-4.369018,9.6],[36.722384,-4.369767,10.2],[36.722382,-4.371579,6.4],[36.722405,-4.372423,7.6],[36.722381,-4.373726,7.9],[36.722382,-4.374426,9.4],[36.722364,-4.374784,10.0],[36.72235,-4.375248,9.2],[36.722302,-4.376379,7.0],[36.72227,-4.376991,6.3],[36.722243,-4.377413,7.0],[36.722195,-4.377799,8.0],[36.722044,-4.378894,6.7],[36.721898,-4.379958,9.2],[36.721848,-4.380343,10.4],[36.721786,-4.380788,8.3],[36.721775,-4.380993,8.1],[36.721788,-4.381302,9.7],[36.721857,-4.381954,13.6],[36.721942,-4.382628,9.1],[36.721949,-4.382845,9.0],[36.721947,-4.383034,9.0],[36.721948,-4.383185,9.1],[36.721932,-4.383315,9.0],[36.72191,-4.383503,9.5],[36.721863,-4.383775,11.2],[36.721818,-4.383994,12.1],[36.721653,-4.384511,10.0],[36.72155,-4.384876,9.2],[36.721521,-4.384984,8.9],[36.721493,-4.385449,10.4],[36.721501,-4.385698,10.3],[36.721516,-4.385813,10.3],[36.721532,-4.385922,10.9],[36.721554,-4.386013,11.9],[36.721583,-4.38612,12.9],[36.721621,-4.386262,13.6],[36.722047,-4.387271,10.6],[36.722185,-4.387637,10.5],[36.722221,-4.387728,9.8],[36.722231,-4.387773,9.5],[36.722259,-4.387861,10.2],[36.72227,-4.387933,10.0],[36.722287,-4.387994,10.0],[36.722306,-4.388118,9.7],[36.722364,-4.388717,8.4],[36.722483,-4.390264,10.9],[36.722605,-4.391491,8.0],[36.722618,-4.391582,7.1],[36.722641,-4.391687,7.1],[36.722675,-4.391804,8.8],[36.722712,-4.391914,10.7],[36.722959,-4.392588,10.8],[36.722993,-4.392682,9.6],[36.723028,-4.3928,8.8],[36.723058,-4.392902,8.7],[36.723071,-4.392977,8.2],[36.723085,-4.39306,7.6],[36.723105,-4.393237,6.7],[36.723111,-4.393431,6.1],[36.723093,-4.394582,5.3],[36.723075,-4.394783,4.3],[36.72306,-4.394892,4.6],[36.723041,-4.395002,4.9],[36.723013,-4.395133,5.3],[36.722987,-4.39524,5.7],[36.722929,-4.395426,5.6],[36.722578,-4.396391,3.4],[36.722044,-4.398151,9.3],[36.721776,-4.39929,6.2],[36.721283,-4.400834,9.2],[36.720853,-4.402079,11.0],[36.720668,-4.402733,9.9],[36.720626,-4.402867,10.7],[36.720592,-4.403003,11.7],[36.720563,-4.403211,12.1],[36.720434,-4.404416,12.0],[36.720396,-4.404687,11.0],[36.720308,-4.405108,8.6],[36.720244,-4.405324,8.0],[36.720143,-4.405622,9.2],[36.719949,-4.406047,12.1],[36.719669,-4.40668,7.4],[36.719436,-4.407196,11.5],[36.719246,-4.407525,8.7],[36.71891,-4.408049,19.5],[36.71853,-4.408626,21.9],[36.718409,-4.408965,14.6],[36.718368,-4.409133,12.3],[36.718332,-4.409402,14.5],[36.71834,-4.409607,17.3],[36.718372,-4.409774,19.0],[36.718408,-4.409902,20.1],[36.718465,-4.410044,20.3],[36.718515,-4.410141,19.8],[36.718633,-4.410317,19.7],[36.718792,-4.410547,17.7],[36.718982,-4.410767,20.8],[36.719264,-4.411105,28.6],[36.719569,-4.411475,19.7],[36.719671,-4.411668,14.1],[36.719697,-4.4118,12.1],[36.719704,-4.412019,9.7],[36.71969,-4.41225,9.2],[36.71966,-4.412467,8.8],[36.7178,-4.419525,8.2],[36.717797,-4.419573,8.2],[36.717811,-4.419614,8.3],[36.717868,-4.419672,8.4],[36.718245,-4.419852,9.6],[36.71828,-4.419905,9.8],[36.718281,-4.419952,9.8],[36.718274,-4.419992,10.0],[36.718017,-4.421176,9.2],[36.717031,-4.425127,13.7],[36.716882,-4.426592,7.7],[36.716886,-4.426681,7.8],[36.716898,-4.426762,7.8],[36.716933,-4.42688,8.0],[36.717002,-4.427038,7.1],[36.717081,-4.42712,6.6],[36.717127,-4.427149,6.7],[36.717183,-4.427164,6.9],[36.717756,-4.427155,11.1],[36.717801,-4.427172,11.9],[36.717828,-4.427215,12.7],[36.717955,-4.428513,16.3],[36.71801,-4.429099,10.1],[36.718029,-4.429195,9.9],[36.718056,-4.429251,9.3],[36.718079,-4.429284,9.3],[36.718134,-4.429331,9.4],[36.718194,-4.429351,9.2],[36.718441,-4.429341,10.0],[36.71981,-4.429196,13.8],[36.721273,-4.429035,15.8],[36.72218,-4.42901,10.9],[36.722577,-4.42899,14.1],[36.723115,-4.428929,13.7],[36.723374,-4.428905,13.3],[36.723488,-4.428907,14.2],[36.723625,-4.428899,15.3],[36.724082,-4.428885,17.1],[36.724379,-4.428863,17.7],[36.724547,-4.428852,17.9],[36.724904,-4.428833,18.0],[36.725356,-4.428807,17.5],[36.725791,-4.428767,20.2],[36.72594,-4.428755,21.3],[36.726467,-4.428719,26.5],[36.726805,-4.428695,26.6],[36.726985,-4.428667,25.6],[36.727298,-4.428638,21.9],[36.727495,-4.428634,19.2],[36.727852,-4.428593,15.8],[36.728118,-4.428565,15.3],[36.728674,-4.428529,15.9],[36.729182,-4.428482,16.1],[36.729701,-4.428427,18.0],[36.730099,-4.428396,20.7],[36.730535,-4.428359,24.1],[36.731117,-4.42832,25.9],[36.731917,-4.428283,21.9],[36.732317,-4.428264,22.1],[36.732483,-4.428175,21.4],[36.732521,-4.428137,21.2],[36.732552,-4.4281,21.1],[36.732594,-4.428035,20.8],[36.732707,-4.427484,17.2],[36.732734,-4.427399,17.2],[36.732772,-4.427325,17.0],[36.732803,-4.427289,17.2],[36.732833,-4.42726,17.3],[36.73293,-4.427235,17.6],[36.732978,-4.427233,17.7],[36.733017,-4.427242,17.8],[36.733341,-4.427395,19.0],[36.733383,-4.427408,19.1],[36.73342,-4.427415,19.2],[36.73346,-4.427419,19.3],[36.733521,-4.427417,19.5],[36.735406,-4.427268,24.2],[36.736771,-4.427134,19.1],[36.737189,-4.427087,20.5],[36.73721,-4.427082,20.5],[36.737229,-4.427071,20.5],[36.737243,-4.427053,20.6],[36.737257,-4.427028,20.4],[36.737451,-4.426697,20.0],[36.737466,-4.426659,19.9],[36.737476,-4.426624,19.9],[36.737478,-4.426585,19.9],[36.737475,-4.426544,19.9],[36.737473,-4.426453,19.9],[36.737454,-4.425824,20.8],[36.73742,-4.425031,22.6],[36.737416,-4.424975,22.9],[36.737409,-4.424926,23.3],[36.737397,-4.424888,23.4],[36.737375,-4.424854,23.7],[36.737357,-4.424838,23.7],[36.737331,-4.42482,23.7],[36.737307,-4.424813,23.7],[36.737288,-4.424812,23.6],[36.737276,-4.424812,23.5],[36.734037,-4.42507,18.1],[36.733067,-4.425199,19.0],[36.733037,-4.425212,19.0],[36.733017,-4.42523,19.0],[36.733,-4.425256,18.9],[36.732994,-4.425271,18.9],[36.732979,-4.426001,19.1],[36.732971,-4.426154,19.0],[36.732961,-4.426255,18.3],[36.732944,-4.426358,17.7],[36.73292,-4.426418,17.6],[36.732898,-4.426472,17.3],[36.732876,-4.426498,17.2],[36.732754,-4.426622,17.1],[36.732704,-4.42664,17.3],[36.732647,-4.426655,17.5],[36.7326,-4.426664,17.7],[36.732537,-4.426669,18.0],[36.731861,-4.426738,17.1],[36.729995,-4.42689,20.9],[36.728473,-4.427001,19.4],[36.727999,-4.426971,17.0],[36.727357,-4.426926,13.7],[36.726993,-4.426857,12.8],[36.726247,-4.426708,14.7],[36.725561,-4.426536,11.5],[36.725073,-4.426431,11.9],[36.724635,-4.426333,14.2],[36.724056,-4.426215,12.5],[36.723572,-4.42614,10.1],[36.723028,-4.42605,10.1],[36.722371,-4.425904,11.7],[36.721846,-4.425831,12.7],[36.721655,-4.425818,12.1],[36.721451,-4.425786,10.7],[36.721112,-4.425722,9.5],[36.720874,-4.425685,9.6],[36.720503,-4.425666,8.4],[36.720098,-4.425688,6.1],[36.719702,-4.425732,5.6],[36.719283,-4.425825,7.8],[36.718741,-4.426003,7.2],[36.718452,-4.426096,7.0],[36.718166,-4.426193,7.0],[36.717707,-4.426212,5.7],[36.717052,-4.426235,5.6],[36.716376,-4.426286,10.7],[36.715858,-4.426342,15.2],[36.715202,-4.426374,12.2],[36.714309,-4.426396,8.2],[36.712156,-4.426401,5.3],[36.711035,-4.426388,6.6],[36.709628,-4.427846,3.6],[36.708143,-4.429121,3.6],[36.706287,-4.430748,0.1],[36.7038,-4.432751,3.4],[36.702881,-4.433436,10.4],[36.702116,-4.433983,11.7],[36.701887,-4.434179,8.8],[36.701685,-4.43442,5.5],[36.701248,-4.435031,7.0],[36.70062,-4.435862,5.3],[36.700178,-4.43629,2.6],[36.69792,-4.437944,3.4],[36.694418,-4.44047,2.4],[36.694238,-4.440673,3.1],[36.693962,-4.440762,3.8],[36.692563,-4.441587,9.3],[36.689823,-4.443211,10.7],[36.689603,-4.443429,8.3],[36.689312,-4.443508,3.8],[36.687804,-4.444392,4.7],[36.684497,-4.446358,2.8],[36.68428,-4.446564,5.4],[36.684015,-4.446643,8.4],[36.681344,-4.448218,0.6],[36.680689,-4.448602,3.5],[36.680587,-4.448931,4.1],[36.682236,-4.45348,3.1],[36.682065,-4.453896,5.2],[36.681441,-4.454354,0.4],[36.681424,-4.454373,0.2],[36.681413,-4.454396,0.1],[36.681409,-4.454421,0.1],[36.681409,-4.454442,0.1],[36.681419,-4.45451,0.5],[36.681512,-4.454882,2.7],[36.681735,-4.455521,5.8],[36.682368,-4.457169,0.7],[36.683093,-4.458806,-0.3],[36.683115,-4.458827,-0.5],[36.683138,-4.458838,-0.9],[36.683161,-4.45884,-1.2],[36.683185,-4.458834,-1.6],[36.685054,-4.457697,3.8],[36.685231,-4.457655,4.4],[36.685996,-4.457568,9.4],[36.686014,-4.457576,9.4],[36.686027,-4.457588,9.5],[36.686045,-4.457628,9.6],[36.686142,-4.457885,10.2],[36.686147,-4.457909,10.3],[36.686147,-4.457927,10.2],[36.686137,-4.457944,10.4],[36.686122,-4.457956,10.5],[36.685191,-4.45857,4.1],[36.684217,-4.459084,2.5],[36.683558,-4.459479,-5.8],[36.683464,-4.459545,-4.8],[36.6834,-4.459623,-3.4],[36.683369,-4.459693,-2.1],[36.68334,-4.459769,-1.2],[36.683324,-4.459863,-0.8],[36.683325,-4.459952,-0.8],[36.683385,-4.46035,1.1],[36.683396,-4.460452,3.3],[36.683398,-4.460547,5.3],[36.68339,-4.460658,6.0],[36.683383,-4.460744,6.4],[36.683358,-4.460841,6.7],[36.68333,-4.460954,5.9],[36.683307,-4.461007,6.0],[36.683282,-4.461069,5.8],[36.683224,-4.461179,5.6],[36.683156,-4.461281,5.3],[36.683101,-4.461348,5.0],[36.682972,-4.461464,5.9],[36.682892,-4.46152,6.7],[36.6828,-4.461567,7.5],[36.682721,-4.461595,7.7],[36.68265,-4.461615,7.9],[36.682553,-4.461624,8.5],[36.682412,-4.461619,9.0],[36.682327,-4.461601,9.4],[36.68223,-4.461567,10.2],[36.682145,-4.461523,9.3],[36.681996,-4.46142,9.1],[36.681896,-4.461304,8.2],[36.681792,-4.461158,6.1],[36.681736,-4.461038,6.6],[36.681351,-4.460044,6.7],[36.681351,-4.460027,6.7],[36.681357,-4.460012,6.7],[36.681364,-4.459996,6.7],[36.681374,-4.459985,6.6],[36.68207,-4.459489,6.7],[36.682128,-4.459252,5.4],[36.681803,-4.458441,3.5],[36.681869,-4.458035,2.6],[36.681879,-4.457961,2.4],[36.681882,-4.457916,2.3],[36.681881,-4.457877,2.1],[36.681874,-4.457823,2.2],[36.681861,-4.45777,2.3],[36.681844,-4.457721,2.7],[36.681823,-4.457677,3.2],[36.681792,-4.457629,3.7],[36.681757,-4.457591,4.2],[36.681731,-4.457566,4.5],[36.681705,-4.457546,4.8],[36.681673,-4.457528,5.0],[36.681643,-4.457514,5.3],[36.681604,-4.457502,5.5],[36.681556,-4.457496,5.9],[36.681196,-4.457491,5.0],[36.680775,-4.457484,-0.3],[36.680744,-4.457488,-0.3],[36.680715,-4.457495,-0.4],[36.680686,-4.457505,-0.5],[36.680658,-4.457517,-0.5],[36.680626,-4.457536,-0.6],[36.680596,-4.45756,-0.6],[36.680569,-4.457587,-0.3],[36.680547,-4.457614,-0.1],[36.680526,-4.457643,0.3],[36.680508,-4.457675,0.7],[36.680493,-4.457709,1.1],[36.680479,-4.457748,1.5],[36.680461,-4.457828,2.0],[36.680455,-4.457911,2.8],[36.680501,-4.458408,3.1],[36.680364,-4.458765,1.2],[36.680019,-4.45938,2.5],[36.679994,-4.45939,2.7],[36.679971,-4.45937,2.5],[36.679958,-4.459321,2.2],[36.679859,-4.458243,1.6],[36.679775,-4.457432,4.9],[36.679669,-4.456622,1.6],[36.679511,-4.455575,0.2],[36.679249,-4.454202,-3.3],[36.679092,-4.453429,1.3],[36.679037,-4.453163,3.7],[36.678996,-4.452904,4.2],[36.678968,-4.4526,3.8],[36.678951,-4.452299,3.1],[36.678952,-4.4521,2.4],[36.678975,-4.451701,1.8],[36.679034,-4.451196,3.4],[36.679143,-4.450743,4.9],[36.679252,-4.4504,3.8],[36.679357,-4.450019,2.8],[36.679606,-4.449575,2.1],[36.679769,-4.449339,2.9],[36.68,-4.44904,5.0],[36.680237,-4.448831,4.0],[36.680425,-4.448687,3.3],[36.680703,-4.448491,3.5],[36.680982,-4.448322,3.4],[36.681593,-4.44797,-1.2],[36.682342,-4.447522,4.1],[36.683233,-4.446995,8.5],[36.684739,-4.446083,2.0],[36.687418,-4.444495,3.8],[36.689855,-4.443055,9.5],[36.692228,-4.441654,7.1],[36.694447,-4.440311,3.0],[36.696796,-4.438617,-1.5],[36.699536,-4.436614,3.0],[36.699836,-4.436361,1.1],[36.70007,-4.436154,1.7],[36.700361,-4.435844,4.3],[36.700667,-4.4355,4.6],[36.701418,-4.434604,5.7],[36.701821,-4.434156,8.8],[36.702008,-4.433954,12.6],[36.702201,-4.433789,9.7],[36.702316,-4.43369,8.6],[36.703292,-4.432978,10.5],[36.705482,-4.431263,6.2],[36.706454,-4.430439,0.1],[36.707747,-4.429247,5.7],[36.707865,-4.429107,4.3],[36.710208,-4.426889,4.1],[36.712027,-4.425128,3.1],[36.712764,-4.42455,9.6],[36.712788,-4.424526,9.9],[36.712836,-4.424523,10.9],[36.712902,-4.424529,12.4],[36.712964,-4.424554,13.8],[36.713155,-4.42465,17.9],[36.713519,-4.424843,22.0],[36.713787,-4.424978,25.9],[36.714128,-4.425159,23.3],[36.714484,-4.425328,16.8],[36.714989,-4.425576,10.0],[36.715128,-4.425623,9.4],[36.715233,-4.425647,9.1],[36.715334,-4.425667,9.3],[36.715518,-4.42568,10.1],[36.715678,-4.4257,10.7],[36.71573,-4.425703,11.0],[36.716616,-4.425635,10.7],[36.717921,-4.425484,10.0],[36.718221,-4.425461,9.1],[36.718512,-4.425409,10.2],[36.72026,-4.425056,9.7],[36.720589,-4.425047,10.3],[36.720611,-4.425036,10.3],[36.720625,-4.425005,10.5],[36.720636,-4.424949,11.1],[36.72073,-4.424263,17.5],[36.720782,-4.424016,18.0],[36.720861,-4.42372,19.3],[36.720892,-4.423625,20.0],[36.720922,-4.42335,19.7],[36.720906,-4.42281,23.1],[36.720906,-4.422362,22.9],[36.720919,-4.421823,17.6],[36.720918,-4.421782,17.5],[36.720912,-4.421747,17.3],[36.720899,-4.421726,17.1],[36.720867,-4.421712,17.2],[36.718508,-4.421461,11.9],[36.718123,-4.421106,9.6],[36.718108,-4.42108,9.5],[36.718106,-4.421044,9.7],[36.719543,-4.415972,13.1]];
+const FULL_APPROX_FROM=null;
+const HALF_TRACK=[[36.719531,-4.415964,13.3],[36.718084,-4.421051,9.4],[36.716996,-4.425197,13.4],[36.716864,-4.426645,7.7],[36.716863,-4.428164,15.0],[36.716911,-4.428865,14.4],[36.716982,-4.429019,15.4],[36.717041,-4.429133,16.4],[36.717127,-4.429231,18.2],[36.717194,-4.429289,19.6],[36.717266,-4.429313,20.5],[36.717765,-4.429308,16.9],[36.718201,-4.429347,9.1],[36.718324,-4.429342,8.8],[36.718851,-4.429291,14.9],[36.721515,-4.428979,13.8],[36.721542,-4.42895,13.3],[36.721562,-4.428903,12.9],[36.721746,-4.425337,13.1],[36.721734,-4.425309,13.1],[36.721714,-4.425287,13.0],[36.7215,-4.425251,12.6],[36.721019,-4.425212,11.8],[36.72061,-4.425163,10.2],[36.72041,-4.425152,9.7],[36.720203,-4.425158,9.0],[36.719668,-4.425217,10.3],[36.718249,-4.425472,8.9],[36.715851,-4.425709,11.4],[36.715814,-4.425717,11.2],[36.715784,-4.425731,10.9],[36.715778,-4.425756,10.6],[36.715778,-4.425788,10.4],[36.715781,-4.426698,17.4],[36.715911,-4.428319,13.2],[36.716003,-4.429345,18.0],[36.716042,-4.429653,16.5],[36.716058,-4.429983,14.7],[36.716151,-4.431127,17.3],[36.716245,-4.432445,16.6],[36.716258,-4.433122,13.7],[36.716245,-4.433535,13.8],[36.716217,-4.433959,13.3],[36.716167,-4.434397,12.4],[36.71611,-4.434813,12.4],[36.715944,-4.435858,15.2],[36.715874,-4.436188,16.0],[36.715837,-4.436229,15.9],[36.715752,-4.436294,16.2],[36.71565,-4.436308,17.8],[36.715551,-4.436284,19.9],[36.71548,-4.436235,20.8],[36.715419,-4.43617,22.5],[36.715384,-4.436098,24.6],[36.715361,-4.436029,26.9],[36.715196,-4.435324,32.7],[36.714245,-4.432493,9.6],[36.714243,-4.432125,7.0],[36.714126,-4.431777,6.0],[36.71412,-4.431723,6.0],[36.714119,-4.431669,5.9],[36.714138,-4.431589,6.2],[36.714162,-4.431514,6.6],[36.714217,-4.43136,7.1],[36.714285,-4.43118,8.1],[36.714473,-4.430897,8.6],[36.714799,-4.430541,6.8],[36.715354,-4.429916,6.2],[36.715424,-4.429875,6.2],[36.715686,-4.429767,7.0],[36.715813,-4.429352,14.0],[36.71581,-4.428702,14.0],[36.715797,-4.428345,14.6],[36.715776,-4.427985,15.5],[36.715691,-4.426653,16.3],[36.715652,-4.42653,14.1],[36.715636,-4.426505,13.6],[36.715615,-4.426486,12.9],[36.715577,-4.426468,11.9],[36.715435,-4.426414,11.2],[36.714395,-4.426408,9.5],[36.711926,-4.426342,2.8],[36.711928,-4.425708,1.4],[36.711967,-4.425478,2.5],[36.71211,-4.425199,3.5],[36.713921,-4.423406,12.5],[36.717327,-4.420062,5.5],[36.717591,-4.419587,7.1],[36.717676,-4.419319,7.9],[36.718567,-4.416117,8.8],[36.719536,-4.412573,8.2],[36.719545,-4.412458,8.6],[36.719534,-4.412369,9.0],[36.719506,-4.412288,9.4],[36.71945,-4.412232,9.9],[36.719374,-4.412204,10.8],[36.719128,-4.412223,13.7],[36.717804,-4.412401,12.2],[36.717677,-4.412435,11.9],[36.71761,-4.412462,11.8],[36.717504,-4.412512,11.7],[36.717397,-4.412577,10.6],[36.714396,-4.414454,4.2],[36.714268,-4.41463,4.6],[36.714189,-4.414674,5.0],[36.713681,-4.414638,3.5],[36.713454,-4.414564,2.0],[36.710347,-4.413284,0.0],[36.710221,-4.413246,0.1],[36.71011,-4.413223,0.0],[36.70995,-4.413189,0.1],[36.709846,-4.413178,0.1],[36.709682,-4.413174,0.1],[36.709522,-4.413172,0.1],[36.70938,-4.413187,0.1],[36.709224,-4.413214,0.1],[36.709102,-4.41325,0.1],[36.708945,-4.413322,0.0],[36.708748,-4.413432,0.0],[36.708237,-4.413812,0.0],[36.707414,-4.414485,0.0],[36.70734,-4.414528,0.0],[36.707271,-4.41456,0.0],[36.707207,-4.414576,0.0],[36.707113,-4.414586,0.1],[36.707015,-4.414583,0.1],[36.706905,-4.414554,0.1],[36.706778,-4.414491,0.1],[36.706669,-4.414429,0.1],[36.705694,-4.413897,0.1],[36.705544,-4.413861,0.1],[36.705481,-4.413846,0.1],[36.705435,-4.413817,0.0],[36.705407,-4.413746,0.0],[36.705404,-4.413683,0.0],[36.705418,-4.413633,0.1],[36.705451,-4.413584,0.0],[36.705489,-4.413562,0.1],[36.705537,-4.413558,0.0],[36.705589,-4.413569,0.1],[36.705625,-4.413611,0.1],[36.705748,-4.413754,0.1],[36.70648,-4.414201,0.1],[36.706883,-4.414426,0.1],[36.706965,-4.414444,0.1],[36.707031,-4.414453,0.0],[36.707121,-4.414442,0.0],[36.707219,-4.414429,0.1],[36.707311,-4.414407,0.1],[36.707427,-4.414348,0.0],[36.707508,-4.414282,0.1],[36.70757,-4.414196,0.0],[36.707697,-4.413903,0.0],[36.707733,-4.413838,0.0],[36.707789,-4.413821,0.0],[36.707968,-4.413778,0.1],[36.708728,-4.413345,0.1],[36.708985,-4.413204,0.1],[36.709154,-4.413141,0.0],[36.709394,-4.413097,0.0],[36.709601,-4.413082,0.0],[36.709812,-4.413087,0.0],[36.709981,-4.413102,0.0],[36.710249,-4.413163,0.0],[36.710663,-4.413299,0.1],[36.713486,-4.414504,3.1],[36.713677,-4.414551,4.3],[36.713758,-4.414555,4.9],[36.713831,-4.414544,5.4],[36.713958,-4.41449,5.7],[36.714117,-4.414424,5.2],[36.714168,-4.414399,5.0],[36.71431,-4.414365,4.5],[36.714395,-4.414333,4.3],[36.715116,-4.413873,7.1],[36.715152,-4.413838,7.2],[36.715181,-4.413749,7.8],[36.715289,-4.413431,10.1],[36.715378,-4.413187,9.7],[36.715522,-4.412901,6.6],[36.715779,-4.412529,9.5],[36.716588,-4.411573,15.2],[36.717101,-4.410989,17.9],[36.718033,-4.409879,14.9],[36.718087,-4.409793,16.2],[36.71812,-4.409725,16.7],[36.71815,-4.409648,16.1],[36.718176,-4.409566,15.2],[36.718208,-4.40938,13.4],[36.718232,-4.409233,12.5],[36.718338,-4.4089,15.0],[36.718463,-4.408639,21.0],[36.719268,-4.407344,9.0],[36.719429,-4.407026,8.9],[36.719493,-4.406896,7.3],[36.7196,-4.406644,5.1],[36.719881,-4.406005,12.5],[36.720001,-4.405729,9.9],[36.720072,-4.405525,8.1],[36.720117,-4.405387,7.6],[36.720167,-4.405236,7.2],[36.720208,-4.405085,7.4],[36.720296,-4.40472,10.1],[36.720331,-4.404492,11.7],[36.720374,-4.404216,11.2],[36.720414,-4.403707,9.3],[36.720519,-4.402993,9.8],[36.720569,-4.402778,9.2],[36.721378,-4.400277,6.8],[36.72177,-4.398871,5.9],[36.722213,-4.397255,10.6],[36.722845,-4.395426,5.2],[36.722913,-4.395187,5.0],[36.72295,-4.395034,4.4],[36.722969,-4.39493,4.1],[36.723009,-4.394658,3.7],[36.723021,-4.394489,5.1],[36.723021,-4.394243,6.0],[36.723026,-4.393986,6.3],[36.723028,-4.393754,5.9],[36.723024,-4.393351,4.6],[36.722993,-4.393115,5.2],[36.72295,-4.392887,5.6],[36.722867,-4.392637,7.8],[36.722593,-4.391839,4.7],[36.722547,-4.391657,2.5],[36.722526,-4.391536,4.0],[36.722506,-4.391247,6.8],[36.722214,-4.388195,8.0],[36.722188,-4.388008,8.0],[36.722159,-4.387823,8.2],[36.722115,-4.387683,8.9],[36.72194,-4.387272,8.7],[36.72149,-4.386177,10.2],[36.721432,-4.385958,8.6],[36.721401,-4.385736,8.0],[36.721392,-4.385547,9.0],[36.7215,-4.383438,6.7],[36.72148,-4.381655,11.3],[36.721438,-4.380437,10.3],[36.721427,-4.379882,12.3],[36.72153,-4.378419,6.0],[36.721586,-4.37743,6.8],[36.721588,-4.375846,7.4],[36.72153,-4.374806,7.7],[36.721448,-4.37352,8.7],[36.721374,-4.373012,5.8],[36.721337,-4.372833,4.6],[36.720931,-4.371239,3.6],[36.720509,-4.369925,5.3],[36.720158,-4.368766,5.5],[36.720122,-4.368607,7.6],[36.720092,-4.368407,7.7],[36.719908,-4.366028,6.8],[36.719636,-4.3624,9.9],[36.719331,-4.359212,6.1],[36.719022,-4.356971,5.0],[36.718891,-4.356338,6.1],[36.71876,-4.355819,5.1],[36.718641,-4.355408,4.1],[36.718359,-4.354383,5.2],[36.71818,-4.353692,6.3],[36.718033,-4.352941,4.9],[36.717991,-4.352535,5.0],[36.718005,-4.352485,5.1],[36.718034,-4.352453,5.3],[36.718882,-4.352059,11.1],[36.719594,-4.351628,9.6],[36.719619,-4.351618,9.7],[36.719639,-4.35162,9.9],[36.719656,-4.351628,9.8],[36.71968,-4.35165,10.0],[36.719719,-4.351721,10.0],[36.719948,-4.352211,10.8],[36.720002,-4.352336,10.6],[36.72005,-4.352462,10.3],[36.720081,-4.352566,10.1],[36.720104,-4.352661,10.0],[36.720119,-4.352753,10.0],[36.720128,-4.35283,10.1],[36.720136,-4.353037,10.4],[36.720203,-4.353647,12.8],[36.720291,-4.354256,16.0],[36.720372,-4.354782,12.8],[36.720435,-4.355325,14.5],[36.720541,-4.356021,16.9],[36.720585,-4.356317,15.2],[36.720661,-4.356683,14.9],[36.720781,-4.357249,17.7],[36.720814,-4.357414,19.8],[36.720839,-4.357654,21.1],[36.72086,-4.35801,17.9],[36.720908,-4.358466,11.2],[36.720938,-4.35876,9.4],[36.720981,-4.359084,9.0],[36.721015,-4.359347,10.4],[36.721032,-4.359531,11.8],[36.72107,-4.359971,14.9],[36.721087,-4.360365,14.2],[36.721101,-4.360728,12.2],[36.721114,-4.361296,16.0],[36.721145,-4.36162,17.1],[36.721191,-4.361951,15.0],[36.721288,-4.362397,12.6],[36.721368,-4.362682,14.0],[36.721489,-4.363039,18.8],[36.721655,-4.363512,17.6],[36.721758,-4.363824,15.4],[36.721853,-4.36421,14.4],[36.721954,-4.364578,14.6],[36.72204,-4.365026,16.5],[36.722109,-4.36542,19.5],[36.722215,-4.366018,16.0],[36.722269,-4.366415,13.0],[36.722335,-4.366942,10.0],[36.722371,-4.367271,10.6],[36.722387,-4.367656,11.1],[36.722391,-4.369018,9.6],[36.722384,-4.369767,10.2],[36.722382,-4.371579,6.4],[36.722405,-4.372423,7.6],[36.722381,-4.373726,7.9],[36.722382,-4.374426,9.4],[36.722364,-4.374784,10.0],[36.72235,-4.375248,9.2],[36.722302,-4.376379,7.0],[36.72227,-4.376991,6.3],[36.722243,-4.377413,7.0],[36.722195,-4.377799,8.0],[36.722044,-4.378894,6.7],[36.721898,-4.379958,9.2],[36.721848,-4.380343,10.4],[36.721786,-4.380788,8.3],[36.721775,-4.380993,8.1],[36.721788,-4.381302,9.7],[36.721857,-4.381954,13.6],[36.721942,-4.382628,9.1],[36.721949,-4.382845,9.0],[36.721947,-4.383034,9.0],[36.721948,-4.383185,9.1],[36.721932,-4.383315,9.0],[36.72191,-4.383503,9.5],[36.721863,-4.383775,11.2],[36.721818,-4.383994,12.1],[36.721653,-4.384511,10.0],[36.72155,-4.384876,9.2],[36.721521,-4.384984,8.9],[36.721493,-4.385449,10.4],[36.721501,-4.385698,10.3],[36.721516,-4.385813,10.3],[36.721532,-4.385922,10.9],[36.721554,-4.386013,11.9],[36.721583,-4.38612,12.9],[36.721621,-4.386262,13.6],[36.722047,-4.387271,10.6],[36.722185,-4.387637,10.5],[36.722221,-4.387728,9.8],[36.722231,-4.387773,9.5],[36.722259,-4.387861,10.2],[36.72227,-4.387933,10.0],[36.722287,-4.387994,10.0],[36.722306,-4.388118,9.7],[36.722364,-4.388717,8.4],[36.722483,-4.390264,10.9],[36.722605,-4.391491,8.0],[36.722618,-4.391582,7.1],[36.722641,-4.391687,7.1],[36.722675,-4.391804,8.8],[36.722712,-4.391914,10.7],[36.722959,-4.392588,10.8],[36.722993,-4.392682,9.6],[36.723028,-4.3928,8.8],[36.723058,-4.392902,8.7],[36.723071,-4.392977,8.2],[36.723085,-4.39306,7.6],[36.723105,-4.393237,6.7],[36.723111,-4.393431,6.1],[36.723093,-4.394582,5.3],[36.723075,-4.394783,4.3],[36.72306,-4.394892,4.6],[36.723041,-4.395002,4.9],[36.723013,-4.395133,5.3],[36.722987,-4.39524,5.7],[36.722929,-4.395426,5.6],[36.722578,-4.396391,3.4],[36.722044,-4.398151,9.3],[36.721776,-4.39929,6.2],[36.721283,-4.400834,9.2],[36.720853,-4.402079,11.0],[36.720668,-4.402733,9.9],[36.720626,-4.402867,10.7],[36.720592,-4.403003,11.7],[36.720563,-4.403211,12.1],[36.720434,-4.404416,12.0],[36.720396,-4.404687,11.0],[36.720308,-4.405108,8.6],[36.720244,-4.405324,8.0],[36.720143,-4.405622,9.2],[36.719949,-4.406047,12.1],[36.719669,-4.40668,7.4],[36.719436,-4.407196,11.5],[36.719246,-4.407525,8.7],[36.71891,-4.408049,19.5],[36.71853,-4.408626,21.9],[36.718409,-4.408965,14.6],[36.718368,-4.409133,12.3],[36.718332,-4.409402,14.5],[36.71834,-4.409607,17.3],[36.718372,-4.409774,19.0],[36.718408,-4.409902,20.1],[36.718465,-4.410044,20.3],[36.718515,-4.410141,19.8],[36.718633,-4.410317,19.7],[36.718792,-4.410547,17.7],[36.718982,-4.410767,20.8],[36.719264,-4.411105,28.6],[36.719569,-4.411475,19.7],[36.719671,-4.411668,14.1]];
+const FCOL={water:"#38bdf8",gel:"#facc15",iso:"#fb923c"},FIC={water:"💧",gel:"⚡",iso:"🥤"};
+let RT=null,PLAN=null;   // current route model + pace plan
+const rad=x=>x*Math.PI/180,hav=(a,b)=>{const dl=rad(b[0]-a[0]),dn=rad(b[1]-a[1]);const h=Math.sin(dl/2)**2+Math.cos(rad(a[0]))*Math.cos(rad(b[0]))*Math.sin(dn/2)**2;return 12742*Math.asin(Math.sqrt(h))};
+function buildRoute(){
+  const c=RC(),imp=S.gpx[c.key],builtFull=!imp&&c.key==="full",T=imp?imp.pts:builtFull?FULL_TRACK:HALF_TRACK,full=true;
+  const cum=[0];for(let i=1;i<T.length;i++)cum.push(cum[i-1]+hav(T[i-1],T[i]));
+  const GPS=cum[cum.length-1],K=c.dist/GPS,km=cum.map(x=>x*K);
+  const sm=w=>T.map((p,i)=>{const s=T.slice(Math.max(0,i-w),i+w+1);return s.reduce((a,q)=>a+(q[2]||0),0)/s.length});
+  const ele=sm(3),eleG=sm(9);let gain=0;for(let i=1;i<ele.length;i++)gain+=Math.max(0,ele[i]-ele[i-1]);
+  const mapped=km[km.length-1];
+  const interp=(k,arr)=>{k=Math.max(0,Math.min(mapped,k));for(let i=1;i<km.length;i++)if(km[i]>=k){const f=(k-km[i-1])/((km[i]-km[i-1])||1);return[T[i-1][0]+(T[i][0]-T[i-1][0])*f,T[i-1][1]+(T[i][1]-T[i-1][1])*f,arr[i-1]+(arr[i]-arr[i-1])*f]}return[T[T.length-1][0],T[T.length-1][1],arr[arr.length-1]]};
+  RT={T,km,ele,mapped,GPS,gain,imported:!!imp,impName:imp&&imp.name,shared:false,approxFrom:null,approxIdx:-1,builtFull,at:k=>interp(k,ele),atG:k=>interp(k,eleG)[2],turns:imp?[]:builtFull?(()=>{const kAt=f=>km[T.reduce((b,p,i)=>f(p,T[b])?i:b,0)];return[kAt((p,q)=>p[0]<q[0]&&p[1]>-4.42),kAt((p,q)=>p[1]>q[1]),kAt((p,q)=>p[0]>q[0]),kAt((p,q)=>p[1]<q[1])]})():[8.36,15.5]};
+}
+/* ---------- optimal pace plan: even effort ---------- */
+function buildPlan(goal){const c=RC(),D=c.dist,N=Math.ceil(D-1e-9),segs=[];
+  for(let i=0;i<N;i++){const s=i,e=Math.min(i+1,D),L=e-s,tags=[];let f=1;
+    if(e<=RT.mapped+1e-6){const g=(RT.atG(e)-RT.atG(s))/(L*1000)*100,gc=Math.max(-4,Math.min(4,g));f+=gc>0?0.033*gc:0.018*gc;
+      const dz=RT.atG(e)-RT.atG(s);if(dz>=3)tags.push(`↗ +${Math.round(dz)} m`);else if(dz<=-3)tags.push(`↘ ${Math.round(dz)} m`)}
+    if(i===0){f+=0.025;tags.push("start crowd")}else if(i===1)f+=0.008;
+    if(c.aid.some(a=>a>s&&a<=e+1e-6)){f+=0.012;tags.push("💧 drink")}
+    if(c.gels.some(gk=>gk>s&&gk<=e)){tags.push("⚡ gel")}
+    if(RT.turns.some(t=>t>s&&t<=e)){f+=0.008;tags.push("↩ turn")}
+    if(e>D-(c.key==="half"?1.1:2.2)){f-=c.key==="half"?0.012:0.006;tags.push("finish")}
+    segs.push({k:i+1,s,e,L,f,tags})}
+  const p0=goal/segs.reduce((a,x)=>a+x.f*x.L,0);let cum=0;
+  segs.forEach(x=>{x.pace=p0*x.f;x.time=x.pace*x.L;cum+=x.time;x.cum=cum});
+  return{segs,avg:goal/D,goal};
+}
+const cumAt=(plan,k)=>{let t=0;for(const x of plan.segs){if(k>=x.e){t=x.cum;continue}if(k>x.s)t+=(k-x.s)*x.pace;break}return t};
+const paceAt=(plan,k)=>(plan.segs.find(x=>k<x.e)||plan.segs[plan.segs.length-1]).pace;
+
+(function(){
+  const COAST=[[36.6700,-4.4640],[36.6745,-4.4570],[36.6775,-4.4510],[36.6805,-4.4470],[36.6840,-4.4448],[36.6885,-4.4422],[36.6930,-4.4396],[36.6968,-4.4370],[36.6995,-4.4348],[36.7028,-4.4318],[36.7056,-4.4290],[36.7085,-4.4262],[36.7110,-4.4240],[36.7126,-4.4225],[36.7140,-4.4190],[36.7146,-4.4160],
+    [36.7128,-4.4156],[36.7046,-4.4156],[36.7042,-4.4126],[36.7130,-4.4122],[36.7150,-4.4108],[36.7168,-4.4092],[36.7176,-4.4060],[36.7186,-4.4030],
+    [36.7196,-4.4000],[36.7206,-4.3960],[36.7216,-4.3920],[36.7213,-4.3880],[36.7206,-4.3820],[36.7206,-4.3760],[36.7202,-4.3700],[36.7194,-4.3660],
+    [36.7186,-4.3620],[36.7182,-4.3580],[36.7174,-4.3545],[36.7166,-4.3510],[36.7160,-4.3440]];
+  const RIVER=[[36.7330,-4.4318],[36.7270,-4.4305],[36.7215,-4.4292],[36.7165,-4.4280],[36.7128,-4.4262]];
+  const LAB=[["Centre",36.7228,-4.4215],["Mármoles",36.7185,-4.4335],["Guadalmedina",36.7235,-4.4312],["Port",36.7100,-4.4200],["Dique de Levante",36.7038,-4.4085],
+    ["Malagueta",36.7158,-4.4070],["La Caleta",36.7240,-4.4030],["Pedregalejo",36.7245,-4.3820],["El Palo",36.7225,-4.3560],["Mediterranean Sea",36.7085,-4.3800],["La Rosaleda",36.7350,-4.4235],["Huelin",36.7100,-4.4385],["Carretera de Cádiz",36.6935,-4.4475]];
+  let view="all",cur=0;
+  function bounds(){const B0={all:{w:-4.4400,e:-4.3480,n:36.7268,s:36.7022},west:{w:-4.4390,e:-4.4040,n:36.7240,s:36.7030},east:{w:-4.4140,e:-4.3480,n:36.7268,s:36.7120}};
+    if(!RT.imported&&!RT.builtFull)return B0[view];
+    let w=1e9,e=-1e9,n=-1e9,s=1e9;RT.T.forEach(p=>{w=Math.min(w,p[1]);e=Math.max(e,p[1]);n=Math.max(n,p[0]);s=Math.min(s,p[0])});
+    const mx=(e-w)*.06,my=(n-s)*.12;if(view==="all")return{w:w-mx,e:e+mx,n:n+my,s:s-my};
+    const mid=(w+e)/2;return view==="west"?{w:w-mx,e:mid+mx,n:n+my,s:s-my}:{w:mid-mx,e:e+mx,n:n+my,s:s-my}}
+  function draw(){
+    const c=RC(),B=bounds(),cx=Math.cos(rad(36.715)),Wd=1000,H=Math.max(220,Math.round(Wd*(B.n-B.s)/((B.e-B.w)*cx)));
+    const svg=$("#routeSvg");svg.setAttribute("viewBox",`0 0 ${Wd} ${H}`);
+    const sc=Math.min(Wd/((B.e-B.w)*cx),H/(B.n-B.s)),pt=p=>[(p[1]-B.w)*cx*sc,(B.n-p[0])*sc],f=n=>n.toFixed(1);
+    const z=view==="all"?1:1.25,line=a=>a.map(p=>pt(p).map(f).join(",")).join(" L"),M=RT.mapped+1e-6;
+    const c1=pt([36.55,-4.30]),c2=pt([36.55,-4.52]),sea=`M${line(COAST)} L${f(c1[0])},${f(c1[1])} L${f(c2[0])},${f(c2[1])} Z`;
+    const mk=k=>{if(k>M)return"";const[x,y]=pt(RT.at(k));return `<circle cx="${f(x)}" cy="${f(y)}" r="${12*z}" fill="#0a0f1c" stroke="#fff" stroke-width="2"/><text x="${f(x)}" y="${f(y+4.5*z)}" text-anchor="middle" font-size="${12*z}" font-weight="800" fill="#fff">${k}</text>`};
+    const st=F=>{if(F.k>M)return"";const[x,y]=pt(RT.at(F.k)),col=FCOL[F.kind],r=11*z,lab=view==="all"?"":`<text x="${f(x+r+5)}" y="${f(y+4*z)}" font-size="${15*z}" font-weight="700" fill="${col}" paint-order="stroke" stroke="#0a0f1c" stroke-width="3">km ${F.k} · ${F.t}</text>`;
+      return `<circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="${col}" stroke="#0a0f1c" stroke-width="2.5"/><text x="${f(x)}" y="${f(y+4.5*z)}" text-anchor="middle" font-size="${12*z}">${F.kind==="iso"?"🥤":"💧"}</text>${lab}`};
+    const gel=k=>{if(k>M)return"";const[x,y]=pt(RT.at(k)),r=9*z;return `<circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="#facc15" stroke="#0a0f1c" stroke-width="2"/><text x="${f(x)}" y="${f(y+4*z)}" text-anchor="middle" font-size="${11*z}" font-weight="900" fill="#0a0f1c">⚡</text>`};
+    const big=c.key==="half"?[5,10,15,20]:[5,10,15,20,25,30,35,40];
+    const ticks=PLAN.segs.map(x=>x.k).filter(k=>k<=M&&!big.includes(k)&&!c.aid.includes(k)).map(k=>{const[x,y]=pt(RT.at(k));
+      const lab=view==="all"?`<text x="${f(x)}" y="${f(y-9)}" text-anchor="middle" font-size="10" fill="#c7d3e0">${k}</text>`
+        :`<text x="${f(x+9*z)}" y="${f(y-6*z)}" font-size="${11*z}" fill="#e2e8f0" paint-order="stroke" stroke="#0a0f1c" stroke-width="3">km ${k} · ${fTs(cumAt(PLAN,k))}</text>`;
+      return `<circle cx="${f(x)}" cy="${f(y)}" r="${4*z}" fill="#fff" stroke="#0a0f1c" stroke-width="1.5"/>${lab}`}).join("");
+    const s=pt(RT.T[0]),e=pt(RT.T[RT.T.length-1]),endLab=RT.shared?"21 km →":"FINISH";
+    svg.innerHTML=`<defs><linearGradient id="rg" x1="0" x2="1"><stop offset="0" stop-color="#4fc3f7"/><stop offset="1" stop-color="#7c5cf2"/></linearGradient>
+      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#ffffff09"/></pattern></defs>
+      <rect width="${Wd}" height="${H}" fill="#18233c"/><rect width="${Wd}" height="${H}" fill="url(#grid)"/>
+      <path d="${sea}" fill="#0b3a5c"/><path d="M${line(COAST)}" fill="none" stroke="#3b82c4" stroke-width="1.5" opacity=".7"/>
+      <path d="M${line(RIVER)}" fill="none" stroke="#2b6aa3" stroke-width="${6*z}" opacity=".6" stroke-linecap="round"/>
+      ${LAB.map(([t,a,b])=>{const[x,y]=pt([a,b]);const se=t.startsWith("Medit");return `<text x="${f(x)}" y="${f(y)}" text-anchor="middle" font-size="${(se?22:14)*z}" fill="${se?"#5aa7e0":"#8b97ad"}" ${se?'font-style="italic"':''}>${t}</text>`}).join("")}
+      <path d="M${line(RT.T)}" fill="none" stroke="#000" stroke-opacity=".45" stroke-width="${9*z}" stroke-linejoin="round" stroke-linecap="round"/>
+      ${RT.approxIdx>0?`<path d="M${line(RT.T.slice(0,RT.approxIdx+1))}" fill="none" stroke="url(#rg)" stroke-width="${5*z}" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M${line(RT.T.slice(RT.approxIdx))}" fill="none" stroke="#f472b6" stroke-width="${5*z}" stroke-dasharray="${10*z} ${7*z}" stroke-linejoin="round" stroke-linecap="round"/>`
+      :`<path d="M${line(RT.T)}" fill="none" stroke="url(#rg)" stroke-width="${5*z}" stroke-linejoin="round" stroke-linecap="round"/>`}
+      ${ticks}${big.map(mk).join("")}${c.fuel.map(st).join("")}${c.gels.map(gel).join("")}
+      <circle cx="${f(s[0])}" cy="${f(s[1])}" r="${10*z}" fill="#34d399" stroke="#fff" stroke-width="2.5"/><text x="${f(s[0])}" y="${f(s[1]-16*z)}" text-anchor="middle" font-size="${14*z}" font-weight="800" fill="#34d399">START</text>
+      <circle cx="${f(e[0])}" cy="${f(e[1])}" r="${10*z}" fill="#f472b6" stroke="#fff" stroke-width="2.5"/><text x="${f(e[0]+14*z)}" y="${f(e[1]-8*z)}" font-size="${14*z}" font-weight="800" fill="#f472b6">${endLab}</text>
+      <circle id="kmDot" r="${11*z}" fill="#fff" stroke="#7c5cf2" stroke-width="4"/>`;
+    draw.pt=pt;moveDot();
+  }
+  /* timeline: elevation + planned pace step line */
+  function drawEle(){const c=RC(),D=c.dist,Wd=1000,H=120,X=k=>k/D*Wd;
+    const mx=Math.max(...RT.ele,20)+4,Y=v=>H-8-(v/mx)*(H-40);
+    const d=RT.km.map((k,i)=>`${X(k).toFixed(1)},${Y(RT.ele[i]).toFixed(1)}`).join(" L");
+    const ps=PLAN.segs.map(x=>x.pace),pmin=Math.min(...ps),pmax=Math.max(...ps),rng=Math.max(pmax-pmin,6),PY=p=>8+((p-pmin)/rng)*44;
+    let step="";PLAN.segs.forEach((x,i)=>{step+=`${i?"L":"M"}${X(x.s).toFixed(1)},${PY(x.pace).toFixed(1)} L${X(x.e).toFixed(1)},${PY(x.pace).toFixed(1)} `});
+    const unm=RT.mapped<D-0.05?`<rect x="${X(RT.mapped)}" y="0" width="${Wd-X(RT.mapped)}" height="${H}" fill="url(#hatch)"/>`:"";
+    $("#eleSvg").innerHTML=`<defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c5cf2" stop-opacity=".5"/><stop offset="1" stop-color="#4fc3f7" stop-opacity=".05"/></linearGradient>
+      <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="#0a0f1c"/><line x1="0" y1="0" x2="0" y2="10" stroke="#24304a" stroke-width="4"/></pattern></defs>
+      ${PLAN.segs.map((x,i)=>i%2?`<rect x="${X(x.s)}" y="0" width="${X(x.e)-X(x.s)}" height="${H}" fill="#ffffff05"/>`:"").join("")}
+      ${c.fuel.map(F=>`<line x1="${X(F.k)}" x2="${X(F.k)}" y1="0" y2="${H}" stroke="${FCOL[F.kind]}" stroke-opacity=".5" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>`).join("")}
+      ${c.gels.map(k=>`<line x1="${X(k)}" x2="${X(k)}" y1="0" y2="${H}" stroke="#facc15" stroke-width="2" vector-effect="non-scaling-stroke"/>`).join("")}
+      <path d="M0,${H} L${d} L${X(RT.mapped)},${H} Z" fill="url(#eg)"/><path d="M${d}" fill="none" stroke="#a78bfa" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+      ${unm}${RT.approxFrom?`<rect x="${X(RT.approxFrom)}" y="0" width="${Wd-X(RT.approxFrom)}" height="${H}" fill="#f472b6" opacity=".06"/><text x="${X(RT.approxFrom)+6}" y="${H-6}" font-size="11" fill="#f472b6" opacity=".8">approx. route →</text>`:""}
+      <line x1="0" x2="${Wd}" y1="${PY(PLAN.avg)}" y2="${PY(PLAN.avg)}" stroke="#c6f432" stroke-opacity=".35" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"/>
+      <path d="${step}" fill="none" stroke="#c6f432" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
+      <line id="eleCur" x1="0" x2="0" y1="0" y2="${H}" stroke="#fff" stroke-width="2" vector-effect="non-scaling-stroke"/>`}
+  function renderStrip(){const a=PLAN.avg;
+    $("#strip").innerHTML=PLAN.segs.map(x=>{const dl=Math.round(x.pace-a),cls=dl>=3?"slow":dl<=-3?"fast":"even";
+      return `<button class="kc ${cls}" data-km="${x.k}" title="${x.tags.join(", ")||"even effort"}"><small>km ${x.L<0.999?`${x.k} (${dk(x.L,2)})`:x.k}</small><b>${fP(x.pace)}</b><i>${dl===0?"±0":(dl>0?"+":"−")+Math.abs(dl)+" s"}</i><em>${fTs(x.cum)}</em><span>${x.tags.filter(t=>t!=="finish"&&t!=="start crowd").map(t=>t.split(" ")[0]).join("")||"&nbsp;"}</span></button>`}).join("");
+    $("#planHint").textContent=`avg ${fP(a)}/km · ${fP(Math.min(...PLAN.segs.map(x=>x.pace)))}–${fP(Math.max(...PLAN.segs.map(x=>x.pace)))}`}
+  $("#strip").addEventListener("click",e=>{const b=e.target.closest("[data-km]");if(!b)return;cur=Math.min(+b.dataset.km-0.5,RC().dist);$("#kmSlider").value=cur;moveDot();
+    $("#routeSvg").scrollIntoView({behavior:"smooth",block:"nearest"})});
+  function renderFuel(){$("#rsPace").textContent=fP(goalPace())+"/km";
+    $("#fuel").innerHTML=RC().fuel.map(F=>`<div style="--fc:${FCOL[F.kind]}"><b>${FIC[F.kind]} km ${F.k} · ${F.t}</b><em>≈ ${fTs(cumAt(PLAN,F.k))} into the race · ${clockAt(cumAt(PLAN,F.k))}</em><small>${F.d}</small></div>`).join("")}
+  const clockAt=s=>{const[h,m]=waveTime().split(":").map(Number),t=h*3600+m*60+s;return `${pad(Math.floor(t/3600))}:${pad(Math.floor(t%3600/60))}`};
+  window.clockAt=clockAt;
+  function nextAction(k){const c=RC(),acts=[...c.fuel.map(F=>({k:F.k,t:`${F.kind==="iso"?"🥤 sports drink":"💧 water"} km ${F.k}`})),...c.gels.map(g=>({k:g,t:`⚡ gel km ${g}`}))].sort((a,b)=>a.k-b.k);
+    const n=acts.find(a=>a.k>=k-0.05);return n?n.t:"🏁 to the finish"}
+  function moveDot(){const c=RC(),k=Math.min(cur,c.dist),[x,y]=draw.pt(RT.at(k));const d=$("#kmDot");d.setAttribute("cx",x);d.setAttribute("cy",y);
+    const lx=(k/c.dist*1000).toFixed(1);$("#eleCur").setAttribute("x1",lx);$("#eleCur").setAttribute("x2",lx);
+    const kc=Math.min(PLAN.segs.length,Math.floor(k)+1);$$(".kc").forEach(b=>b.classList.toggle("cur",+b.dataset.km===kc));
+    const cb=$(`.kc[data-km="${kc}"]`),st=$("#strip");if(cb&&st.scrollWidth>st.clientWidth)st.scrollLeft=cb.offsetLeft-st.offsetLeft-st.clientWidth/2+cb.offsetWidth/2;
+    $("#kmInfo").innerHTML=`<span>Km <b>${dk(k,1)}</b></span><span>Split <b>${fT(cumAt(PLAN,k))}</b></span><span>Plan pace <b>${fP(paceAt(PLAN,k))}/km</b></span>`+
+      (k<=RT.mapped+0.01?`<span>Elev. <b>${Math.round(RT.at(k)[2])} m</b></span>`:`<span><b>off mapped route</b></span>`)+`<span>Next: <b>${nextAction(k)}</b></span>`}
+  $("#kmSlider").oninput=e=>{cur=+e.target.value;moveDot()};
+  $$("[data-zoom]").forEach(b=>b.onclick=()=>{$$("[data-zoom]").forEach(x=>x.classList.toggle("on",x===b));view=b.dataset.zoom;draw()});
+
+  function texts(){const c=RC();
+    $("#routeTitle").textContent=`Málaga ${c.short.toLowerCase()} route`;
+    $("#rsDist").textContent=dk(RT.GPS,2)+" km";$("#rsGain").textContent="≈ "+Math.round(RT.gain)+" m";$("#rsMax").textContent=Math.round(Math.max(...RT.ele))+" m";
+    $("#gpxReset").hidden=!RT.imported;
+    $("#approxLeg").hidden=!RT.approxFrom;$("#trackNote").innerHTML=RT.approxFrom?`ℹ️ Km 0–21.2 is the real GPS track (the 42K shares it with the half). <b>After km 21.2 the route is approximate</b> (pink dashed line): it is drawn through the landmarks listed for the Wikiloc 42K track – Puente Rosaleda km 25.9, Santo Domingo km 27.5, Parque del Agua km 36.8, Torre Mónica km 37.7, Playa de San Andrés km 39.2, Guadalmedina bridge km 40.1, San Juan Bautista km 41.4 – so km markers there are close but not exact, and elevation is a rough estimate (high point ~21 m near La Rosaleda). Import the Wikiloc 42K GPX below for the exact route.`:"";
+    $("#srcNote").textContent=RT.imported?`Route: imported GPX "${RT.impName}". The coastline on the map is simplified.`:RT.builtFull?`Route: Wikiloc GPS track "GENERALI Maratón Málaga 2025" by Atletismo Málaga (${dk(RT.GPS,2)} km, scaled to 42.195 km). The coastline on the map is simplified.`:`Route: Wikiloc track "GENERALI Media Maratón Málaga 2025" by Atletismo Málaga. The coastline on the map is simplified.`;
+    const cut=c.cut?Object.entries(c.cut).map(([k,v])=>v.slice(0,4)).join(" / "):null,w=c.waves[waveIdx()];
+    $("#facts").innerHTML=[["Start","Paseo del Parque · 08:30 (waves 08:30 / 08:40 / 08:50)"],["Your wave",`${w[1]} · ${w[0]} (${w[2]})`],["Finish",c.finish],
+      ["Aid stations",c.aid.map(a=>"km "+a).join(" · ")+" + finish"],cut?["Cut-offs 5/10/15/20 km",cut]:null,["Time limit",c.limitTxt],["Pacers",c.pacers],["Entry fee",c.fee],
+      ["Bib collection","Cruise Terminal B · Fri–Sat 10:00–20:00"]].filter(Boolean).map(([a,b])=>`<div class="fact"><span>${a}</span><b>${b}</b></div>`).join("");
+    const m=$("#kmSlider");m.max=c.dist.toFixed(2);if(cur>c.dist)cur=0;m.value=cur}
+
+  function rebuild(){buildRoute();PLAN=buildPlan(goalT());texts();drawEle();draw();renderStrip();renderFuel();
+    const iMin=k=>RT.km.findIndex(v=>v>=k),n=9,wp=[...Array(n)].map((_,i)=>RT.T[Math.max(0,iMin(RT.mapped*(i+1)/(n+1)))]);
+    const ll=p=>(+p[0]).toFixed(6)+","+(+p[1]).toFixed(6),o=RT.T[0],fin=RT.T[RT.T.length-1];
+    $("#gmOpen").href="https://www.google.com/maps/dir/?api=1&travelmode=walking&origin="+ll(o)+"&destination="+ll(fin)+"&waypoints="+encodeURIComponent(wp.map(ll).join("|"));
+    rebuild.gm="https://maps.google.com/maps?saddr="+ll(o)+"&daddr="+wp.map(ll).join("+to:")+"+to:"+ll(fin)+"&dirflg=w&output=embed";
+    if($("#mapGmWrap").style.display!=="none")$("#gmFrame").src=rebuild.gm;}
+  window.updRouteInfo=rebuild;window.onRaceChange=()=>{cur=0};
+  $$("[data-map]").forEach(b=>b.onclick=()=>{$$("[data-map]").forEach(x=>x.classList.toggle("on",x===b));
+    const gm=b.dataset.map==="gm";$("#mapSvgWrap").style.display=gm?"none":"";$("#mapGmWrap").style.display=gm?"":"none";
+    if(gm&&$("#gmFrame").getAttribute("src")!==rebuild.gm)$("#gmFrame").src=rebuild.gm});
+
+  /* GPX import */
+  $("#gpxIn").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+    try{const doc=new DOMParser().parseFromString(await f.text(),"application/xml");
+      let pts=[...doc.getElementsByTagName("trkpt")];if(!pts.length)pts=[...doc.getElementsByTagName("rtept")];
+      const P=pts.map(p=>[+p.getAttribute("lat"),+p.getAttribute("lon"),+(p.getElementsByTagName("ele")[0]?.textContent||0)]).filter(p=>!isNaN(p[0])&&!isNaN(p[1]));
+      if(P.length<20)throw 0;
+      const step=Math.max(1,Math.floor(P.length/1500)),thin=P.filter((_,i)=>i%step===0);if(thin[thin.length-1]!==P[P.length-1])thin.push(P[P.length-1]);
+      let L=0;for(let i=1;i<thin.length;i++)L+=hav(thin[i-1],thin[i]);
+      const c=RC();if(Math.abs(L-c.dist)/c.dist>0.15&&!confirm(`This track is ${dk(L,1)} km, but the ${c.name.toLowerCase()} is ${c.dist} km. Use it anyway?`))return;
+      S.gpx[c.key]={name:f.name,pts:thin.map(p=>[+p[0].toFixed(6),+p[1].toFixed(6),+p[2].toFixed(1)])};save();cur=0;rebuild();toast(`GPX imported for the ${c.name.toLowerCase()} (${dk(L,1)} km)`)}
+    catch(_){toast("Could not read that GPX file")}};
+  $("#gpxReset").onclick=()=>{delete S.gpx[RC().key];save();rebuild();toast("Using the built-in route")};
+
+  /* downloads */
+  const dl=(name,txt,type)=>{const u=URL.createObjectURL(new Blob([txt],{type}));const a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)};
+  const pm=(n,p)=>`<Placemark><name>${n}</name><Point><coordinates>${p[1]},${p[0]},0</coordinates></Point></Placemark>`;
+  $("#dlKml").onclick=()=>{const c=RC(),M=RT.mapped;dl(`malaga-${c.key}-route.kml`,`<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Málaga ${c.name}</name>
+<Style id="r"><LineStyle><color>fff27c5c</color><width>5</width></LineStyle></Style>
+<Placemark><name>Route</name><styleUrl>#r</styleUrl><LineString><tessellate>1</tessellate><coordinates>${RT.T.map(p=>`${p[1]},${p[0]},${p[2]||0}`).join(" ")}</coordinates></LineString></Placemark>
+${pm("Start – Paseo del Parque",RT.T[0])}${c.fuel.filter(F=>F.k<=M).map(F=>pm(`Km ${F.k}: ${F.t}`,RT.at(F.k))).join("")}${c.gels.filter(k=>k<=M).map(k=>pm(`Gel at km ${k}`,RT.at(k))).join("")}
+</Document></kml>`,"application/vnd.google-earth.kml+xml");toast("KML downloaded – import it in Google My Maps")};
+  $("#dlGpx").onclick=()=>{const c=RC(),M=RT.mapped;dl(`malaga-${c.key}-route.gpx`,`<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Malaga Run Planner" xmlns="http://www.topografix.com/GPX/1/1">${c.fuel.filter(F=>F.k<=M).map(F=>{const p=RT.at(F.k);return `<wpt lat="${p[0].toFixed(6)}" lon="${p[1].toFixed(6)}"><name>Km ${F.k} ${F.t}</name></wpt>`}).join("")}<trk><name>Málaga ${c.name}</name><trkseg>${RT.T.map(p=>`<trkpt lat="${p[0]}" lon="${p[1]}"><ele>${p[2]||0}</ele></trkpt>`).join("")}</trkseg></trk></gpx>`,"application/gpx+xml");toast("GPX downloaded")};
+})();
+
+function renderAll(){renderCal();renderPerf();window.updRouteInfo&&updRouteInfo();window.renderExtras&&renderExtras()}
+/* ================= iCalendar export: fixed UIDs, SEQUENCE and cancellations ================= */
+const VTZ=["BEGIN:VTIMEZONE","TZID:Europe/Madrid","BEGIN:DAYLIGHT","TZOFFSETFROM:+0100","TZOFFSETTO:+0200","TZNAME:CEST","DTSTART:19700329T020000","RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU","END:DAYLIGHT",
+  "BEGIN:STANDARD","TZOFFSETFROM:+0200","TZOFFSETTO:+0100","TZNAME:CET","DTSTART:19701025T030000","RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU","END:STANDARD","END:VTIMEZONE"];
+const icsEsc=v=>String(v??"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n");
+function fold(line){const enc=new TextEncoder();if(enc.encode(line).length<=75)return line;
+  const out=[];let cur="",n=0,lim=75;for(const ch of line){const b=enc.encode(ch).length;if(n+b>lim){out.push(cur);cur=ch;n=b;lim=74}else{cur+=ch;n+=b}}out.push(cur);return out.join("\r\n ")}
+const stampUTC=ms=>{const d=new Date(ms);return `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`};
+const lstr=(ds,hm)=>ds.replace(/-/g,"")+"T"+hm.replace(":","")+"00";
+const addMin=(ds,hm,min)=>{const[h,m]=hm.split(":").map(Number);const d=pISO(ds);d.setHours(h,m+min,0,0);return{ds:iso(d),hm:pad(d.getHours())+":"+pad(d.getMinutes())}};
+const evTime=e=>e.type==="race"?waveTime():e.time||(e.type==="other"?"":S.defTime||"17:30");
+function durMin(e){if(e.type==="other")return 60;if(e.type==="race")return Math.ceil((goalT()/60+20)/15)*15;
+  const k=(e.aKm||e.km||0),p=sec(e.aPace||e.pace)||360;return Math.max(20,Math.ceil((k*p/60+10)/5)*5)}
+function evSummary(e){const ic={easy:"🏃",tempo:"🔥",pace:"🎯",long:"🛣️",shake:"🦵",race:"🏁",other:"📌"}[e.type]||"🏃";
+  if(e.type==="other")return `${ic} ${e.title}`;
+  if(e.type==="race")return `🏁 Málaga ${RC().name} · goal ${fT(goalT())} · ${fP(goalPace())}/km`;
+  return `${e.aKm?"✅ ":""}${ic} ${e.title} · ${e.km!=null?dk(e.km,1):"?"} km @ ${e.pace||"–"}/km`}
+function evDesc(e){const L=[],c=RC();if(e.type!=="other"&&e.type!=="race"){L.push(`Type: ${TYPE[e.type]}`);if(e.km)L.push(`Plan: ${dk(e.km,1)} km @ ${e.pace||"–"}/km`);
+  if(e.aKm&&e.aPace)L.push(`Run: ${dk(e.aKm)} km @ ${e.aPace}/km (${fT(e.aKm*sec(e.aPace))})`)}
+  if(e.note)L.push("",e.note);
+  if(e.type==="race"){const w=c.waves[waveIdx()];L.push("",`${w[1]} at ${w[0]} · Paseo del Parque`,`Goal ${fT(goalT())} · Avg. Pace ${fP(goalPace())}/km`,
+    `Gels: km ${c.gels.join(", ")} · Aid stations: km ${c.aid.join(", ")}`,`Finish: ${c.finish}`)}
+  L.push("","Road to Málaga · Run Planner");return L.join("\n")}
+function vevent(e,o){const t=evTime(e),L=["BEGIN:VEVENT",`UID:${e.id}@malaga-run-planner`,`DTSTAMP:${stampUTC(Date.now())}`,`SEQUENCE:${e.seq||0}`];
+  if(e.upd)L.push(`LAST-MODIFIED:${stampUTC(e.upd)}`);
+  if(t){const en=addMin(e.date,t,durMin(e)),tz=e.type==="race"||e.type==="shake"?";TZID=Europe/Madrid":"";
+    L.push(`DTSTART${tz}:${lstr(e.date,t)}`,`DTEND${tz}:${lstr(en.ds,en.hm)}`)}
+  else{L.push(`DTSTART;VALUE=DATE:${e.date.replace(/-/g,"")}`,`DTEND;VALUE=DATE:${iso(add(pISO(e.date),1)).replace(/-/g,"")}`,"TRANSP:TRANSPARENT")}
+  L.push("SUMMARY:"+icsEsc(evSummary(e)),"DESCRIPTION:"+icsEsc(evDesc(e)),"STATUS:CONFIRMED","CATEGORIES:"+(e.type==="other"?"Plan":"Running"));
+  if(e.type==="race")L.push("LOCATION:"+icsEsc("Paseo del Parque, Málaga, Spain"),"GEO:36.719531;-4.415964");
+  if(+o.alarm>0&&t&&!e.aKm)L.push("BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsEsc(evSummary(e)),`TRIGGER:-PT${+o.alarm}M`,"END:VALARM");
+  L.push("END:VEVENT");return L}
+function vcancel(x){const t=x.type==="race"?waveTime():x.time||(x.type==="other"?"":S.defTime||"17:30");
+  const L=["BEGIN:VEVENT",`UID:${x.id}@malaga-run-planner`,`DTSTAMP:${stampUTC(Date.now())}`,`SEQUENCE:${x.seq}`,`LAST-MODIFIED:${stampUTC(x.upd)}`];
+  L.push(t?`DTSTART${x.type==="race"||x.type==="shake"?";TZID=Europe/Madrid":""}:${lstr(x.date,t)}`:`DTSTART;VALUE=DATE:${x.date.replace(/-/g,"")}`);
+  L.push("SUMMARY:"+icsEsc("❌ Cancelled: "+x.title),"STATUS:CANCELLED","END:VEVENT");return L}
+function buildICS(list,cancels,o){const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Malaga Run Planner//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH","X-WR-CALNAME:Road to Málaga 🏃",...VTZ];
+  list.forEach(e=>L.push(...vevent(e,o)));(cancels||[]).forEach(x=>L.push(...vcancel(x)));L.push("END:VCALENDAR");return L.map(fold).join("\r\n")+"\r\n"}
+const icsOpt=()=>({alarm:$("#icsAlarm").value,other:$("#icsOther").checked,done:$("#icsDone").checked});
+const pickEv=o=>S.ev.filter(e=>(o.other||e.type!=="other")&&(o.done||!e.aKm)).sort((a,b)=>a.date.localeCompare(b.date));
+function changes(){const o=S.icsOpt||{other:true,done:true};const ch=pickEv(o).filter(e=>(e.upd||0)>S.lastExport),del=S.deleted.filter(x=>x.upd>S.lastExport);return{ch,del,n:ch.length+del.length}}
+function dlFile(name,txt,type){const u=URL.createObjectURL(new Blob([txt],{type}));const a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
+function updBadge(){const c=changes();$("#chgBadge").textContent=S.lastExport&&c.n?c.n:""}
+function icsStatus(){S.alarm=$("#icsAlarm").value;S.defTime=$("#icsTime").value||"17:30";S.icsOpt=icsOpt();save();const c=changes(),n=pickEv(S.icsOpt).length;
+  $("#icsStatus").innerHTML=S.lastExport?`Last exported <b>${new Date(S.lastExport).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short"})}</b>. Since then: <b>${c.ch.length}</b> new/changed and <b>${c.del.length}</b> deleted. The whole plan has ${n} events.`
+    :`Not exported yet. The plan has <b>${n}</b> events. The race is at <b>${waveTime()} Málaga time</b> (your wave). Runs without a start time get the default time (${S.defTime}).`;
+  $("#icsChg").disabled=!S.lastExport||!c.n;updBadge()}
+const stamp=()=>{const d=new Date();return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`};
+const markExp=()=>{S.lastExport=Date.now();save();icsStatus()};
+function openIcs(){$("#icsAlarm").value=S.alarm;$("#icsTime").value=S.defTime;const o=S.icsOpt||{other:true,done:true};$("#icsOther").checked=o.other;$("#icsDone").checked=o.done;
+  icsStatus();$("#icsSheet").classList.add("open");$("#sheetBg").classList.add("open")}
+function closeIcs(){$("#icsSheet").classList.remove("open");if(!$("#editCard").classList.contains("open"))$("#sheetBg").classList.remove("open")}
+$("#icsBtn").onclick=openIcs;$("#icsX").onclick=closeIcs;
+$("#sheetBg").addEventListener("click",closeIcs);
+["#icsAlarm","#icsTime","#icsOther","#icsDone"].forEach(s=>$(s).addEventListener("change",icsStatus));
+$("#icsAll").onclick=()=>{const o=icsOpt();dlFile(`road-to-malaga-${stamp()}.ics`,buildICS(pickEv(o),S.deleted,o),"text/calendar;charset=utf-8");markExp();toast("Calendar file downloaded 📅")};
+$("#icsChg").onclick=()=>{const o=icsOpt(),c=changes();if(!c.n)return;dlFile(`road-to-malaga-changes-${stamp()}.ics`,buildICS(c.ch,c.del,o),"text/calendar;charset=utf-8");markExp();toast(`${c.n} change(s) exported`)};
+try{if(navigator.canShare&&navigator.canShare({files:[new File(["x"],"t.ics",{type:"text/calendar"})]})){$("#icsShare").style.display="";
+  $("#icsShare").onclick=async()=>{const o=icsOpt();try{await navigator.share({files:[new File([buildICS(pickEv(o),S.deleted,o)],"road-to-malaga.ics",{type:"text/calendar"})],title:"Road to Málaga"});markExp()}catch(_){}}}}catch(_){}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeIcs()});
+
+/* ================= Race-day weather (yr.no / MET Norway) ================= */
+let WX=null;
+(async function(){try{const r=await fetch("https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=36.7202&lon=-4.4203",{headers:{Accept:"application/json"}});
+  if(!r.ok)throw new Error(r.status);WX=(await r.json()).properties.timeseries}catch(_){WX=false}renderWx()})();
+function renderWx(){const tiles=$("#wxTiles"),note=$("#wxNote"),YR='<a href="https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/2-2514256/Spania/Andaluc%C3%ADa/Malaga/M%C3%A1laga" target="_blank" rel="noopener" style="color:var(--acc)">yr.no</a>';
+  const none=msg=>{tiles.innerHTML=`<div class="tile" style="grid-column:1/-1"><b>No data yet</b><small>${msg}</small></div>`};
+  if(WX===null)return;
+  if(WX===false){none("Could not load the yr forecast right now (offline or blocked).");note.innerHTML=`See the forecast directly on ${YR}.`;return}
+  const SYM={clearsky:"☀️ Clear",fair:"🌤️ Fair",partlycloudy:"⛅ Partly cloudy",cloudy:"☁️ Cloudy",fog:"🌫️ Fog",lightrain:"🌦️ Light rain",rain:"🌧️ Rain",heavyrain:"🌧️ Heavy rain",lightrainshowers:"🌦️ Showers",rainshowers:"🌦️ Rain showers",heavyrainshowers:"⛈️ Heavy showers"};
+  const sym=c=>{c=(c||"").replace(/_(day|night|polartwilight)$/,"");return SYM[c]||(c.includes("thunder")?"⛈️ Thunder":c.includes("rain")?"🌧️ Rain":"🌡️ "+c)};
+  const full=S.race==="full",endZ=full?"2026-11-08T12:00:00Z":"2026-11-08T10:00:00Z",win=full?"08:00–13:00":"08:00–11:00";
+  const race=WX.filter(t=>t.time>="2026-11-08T07:00:00Z"&&t.time<=endZ),last=WX.length?new Date(WX[WX.length-1].time):null,daysTo=Math.ceil((RACE-Date.now())/864e5);
+  if(!race.length){none("yr has no forecast for Sunday 8 November yet.");
+    note.innerHTML=`The ${YR} forecast currently runs until ${last?last.toLocaleDateString("en-GB",{day:"numeric",month:"long"}):"–"}. It is ${daysTo} days to the start; race-day data appears here about 9–10 days before.`;return}
+  const d=race.map(t=>t.data),T=d.map(x=>x.instant.details.air_temperature),H=d.map(x=>x.instant.details.relative_humidity),Wd=d.map(x=>x.instant.details.wind_speed);
+  const P=d.map(x=>(x.next_1_hours||x.next_6_hours||{details:{}}).details.precipitation_amount||0),S0=(d[0].next_1_hours||d[0].next_6_hours||d[0].next_12_hours||{summary:{}}).summary.symbol_code;
+  const avg=a=>a.reduce((x,y)=>x+y,0)/a.length,sy=sym(S0);
+  tiles.innerHTML=`<div class="tile"><b>${Math.round(Math.min(...T))}–${Math.round(Math.max(...T))}°</b><small>Temp. ${win}</small></div><div class="tile"><b>${sy.split(" ")[0]}</b><small>${sy.split(" ").slice(1).join(" ")}</small></div>
+    <div class="tile"><b>${Math.round(avg(Wd))} m/s</b><small>Wind</small></div><div class="tile"><b>${dk(P.reduce((a,b)=>a+b,0),1)} mm</b><small>Precipitation</small></div>`;
+  note.innerHTML=`Forecast from ${YR} for Sunday 8 Nov, ${win} (humidity ${Math.round(avg(H))}%). Updated every time you open the app. ${Math.max(...T)>=20?"It will be warm: drink at every station and consider running 5–10 s/km slower.":"Good running conditions. Wear a throwaway top at the start."}`}
+
+/* ================= Progress: km per week ================= */
+function renderProgress(){const svg=$("#volSvg");
+  const weeks=[];for(let w=new Date(PLAN_MIN);w<=PLAN_MAX;w=add(w,7)){const days=[...Array(7)].map((_,i)=>iso(add(w,i)));
+    const r=S.ev.filter(e=>e.type!=="other"&&e.type!=="race"&&days.includes(e.date));
+    weeks.push({w,pl:r.reduce((a,e)=>a+(e.km||0),0),dn:r.reduce((a,e)=>a+(e.aKm||0),0),cur:days.includes(iso(new Date()))})}
+  const mx=Math.max(...weeks.map(x=>Math.max(x.pl,x.dn)),10),Wd=600,H=170,bw=Wd/weeks.length,Y=v=>H-26-(v/mx)*(H-46);
+  svg.innerHTML=`<defs><linearGradient id="vg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#4fc3f7"/><stop offset="1" stop-color="#7c5cf2"/></linearGradient></defs>`+weeks.map((x,i)=>{const cx=i*bw+bw/2,b=bw*.28;
+    return `<rect x="${cx-b-2}" y="${Y(x.pl)}" width="${b}" height="${H-26-Y(x.pl)}" rx="4" fill="#2b3a55"/><rect x="${cx+2}" y="${Y(x.dn)}" width="${b}" height="${H-26-Y(x.dn)}" rx="4" fill="url(#vg)"/>
+      <text x="${cx}" y="${Y(Math.max(x.pl,x.dn))-6}" text-anchor="middle" font-size="12" fill="#c7d3e0">${Math.round(x.dn)}/${Math.round(x.pl)}</text>
+      <text x="${cx}" y="${H-8}" text-anchor="middle" font-size="12" fill="${x.cur?"#7dd3fc":"#8b97ad"}" font-weight="${x.cur?700:400}">W${weekNo(x.w)}</text>`}).join("");
+  const tot=weeks.reduce((a,x)=>a+x.dn,0),pl=weeks.reduce((a,x)=>a+x.pl,0);$("#progHint").textContent=`${dk(tot,1)} of ${Math.round(pl)} km`;
+  const d=(RACE-Date.now())/864e5;$("#phase").innerHTML=d>21?"🏗️ Build phase":d>14?"⛰️ Peak week":d>7?"📉 Step-back":d>0?"🔋 Taper: keep the legs fresh":"🏁 Race week"}
+
+/* ================= Pace band ================= */
+function fillWaves(){const c=RC(),s=$("#bandWave"),v=s.dataset.race===S.race&&s.value?s.value:waveTime();s.dataset.race=S.race;s.innerHTML=c.waves.map(w=>`<option value="${w[0]}" ${w[0]===v?"selected":""}>${w[1]} · ${w[0]} (${w[2]})</option>`).join("")}
+function renderBand(){const c=RC(),g=parseT($("#bandGoal").value),goal=g&&g>c.dist*150&&g<=c.limit?g:goalT(),P=goal===goalT()?PLAN:buildPlan(goal);
+  const[wh,wm]=($("#bandWave").value||waveTime()).split(":").map(Number),clock=s=>{const t=wh*3600+wm*60+s;return `${pad(Math.floor(t/3600))}:${pad(Math.floor(t%3600/60))}`};
+  $("#band").innerHTML=P.segs.filter(x=>x.L>=0.999).map(x=>{const fuel=c.gels.some(gk=>gk>x.s&&gk<=x.e);
+    return `<div class="${fuel?"fuel":""}"><b>${fTs(x.cum)}</b><small>km ${x.k} · ${fP(x.pace)} · ${clock(x.cum)}${c.aid.some(a=>a>x.s&&a<=x.e)?" 💧":""}${fuel?" ⚡":""}</small></div>`}).join("")
+    +`<div class="fin"><b>${fT(goal)}</b><small>🏁 Finish · approx. ${clock(goal)} · avg ${fP(goal/c.dist)}/km</small></div>`}
+$("#bandGoal").addEventListener("input",renderBand);$("#bandWave").addEventListener("change",renderBand);
+$("#printBand").onclick=()=>window.print();
+
+/* ================= Race checklist ================= */
+function checkItems(){const c=RC();return[["Entry confirmed","by Mon 2 Nov 20:00"],["Flights + hotel near Paseo del Parque"],["Collect your bib","Cruise Terminal B · Fri–Sat 10:00–20:00"],
+  ["Gels tested in training",`${c.gels.length} gels: km ${c.gels.join(", ")}`],["Race kit + shoes tested on the dress rehearsal (29 Oct)"],["Throwaway top for the start"],
+  ["Watch charged + GPX route on the watch"],["Breakfast 2–3 hours before the start","something you know"],["Plasters / anti-chafe balm"],
+  [`Be at the start by ${(()=>{const[h,m]=waveTime().split(":").map(Number);const t=h*60+m-30;return pad(Math.floor(t/60))+":"+pad(t%60)})()}`,`your wave starts at ${waveTime()}`],["Post-race clothes in the bag drop"]]}
+function renderCheck(){const L=checkItems();$("#checklist").innerHTML=L.map(([t,s],i)=>`<label class="cl ${S.check[i]?"done":""}"><input type="checkbox" data-ck="${i}" ${S.check[i]?"checked":""}><span>${t}${s?`<em>${s}</em>`:""}</span></label>`).join("");
+  $("#chkCount").textContent=`${L.filter((_,i)=>S.check[i]).length}/${L.length}`}
+$("#checklist").addEventListener("change",e=>{const c=e.target.closest("[data-ck]");if(!c)return;S.check[c.dataset.ck]=c.checked;save();renderCheck()});
+$("#chkReset").onclick=()=>{S.check={};save();renderCheck()};
+
+/* ================= Backup / restore ================= */
+$("#bkOut").onclick=()=>{dlFile(`malaga-planner-backup-${stamp()}.json`,JSON.stringify(S,null,1),"application/json");toast("Backup downloaded")};
+$("#bkIn").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!d.ev)throw 0;if(!confirm("Replace your current data with the backup?"))return;S=d;save();location.reload()}catch(_){toast("Invalid backup file")}e.target.value=""};
+
+window.renderExtras=()=>{updBadge();renderProgress();fillWaves();$("#bandGoal").placeholder=fT(goalT());renderBand();renderCheck();renderWx()};
+if(!store.ok())$("#foot").textContent="Preview mode: changes are only kept until the page is closed. Open the file directly in your browser to save locally.";
+
+renderAll();
+
+
+/* ================= App: install, share, offline ================= */
+(function(){
+  const web=location.protocol==="https:"||location.hostname==="localhost";
+  if(web&&"serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+  let deferred=null;
+  window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferred=e;$("#installApp").hidden=false});
+  window.addEventListener("appinstalled",()=>{$("#installApp").hidden=true;toast("Installed 🎉")});
+  const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+  if(!standalone&&/iphone|ipad|ipod/i.test(navigator.userAgent)&&web)$("#installApp").hidden=false;
+  $("#installApp").onclick=async()=>{
+    if(deferred){deferred.prompt();await deferred.userChoice;deferred=null;$("#installApp").hidden=true;return}
+    alert("To install on iPhone/iPad: tap the Share button in Safari, then 'Add to Home Screen'.")};
+  $("#shareApp").onclick=async()=>{
+    if(!web){toast("Upload the app to a web host first to get a shareable link");return}
+    const d={title:"Road to Málaga – Run Planner",text:"My training plan and race info for Málaga 🏃",url:location.href.split("#")[0]};
+    try{if(navigator.share){await navigator.share(d);return}}catch(_){return}
+    try{await navigator.clipboard.writeText(d.url);toast("Link copied")}catch(_){prompt("Copy this link:",d.url)}};
+})();
+</script>
+</body>
+</html>

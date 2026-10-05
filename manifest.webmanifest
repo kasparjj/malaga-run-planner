@@ -1,0 +1,16 @@
+{
+  "name": "Road to Málaga – Run Planner",
+  "short_name": "Málaga Run",
+  "description": "Training plan, pace plan, route and race-day info for the Málaga Half Marathon and Marathon, 8 Nov 2026.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#070b16",
+  "theme_color": "#0a0f1c",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
